@@ -39,14 +39,14 @@ export default function BentoGrid() {
     return (
         <section id="features" className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 md:px-8 bg-black relative overflow-hidden">
             <div className="max-w-[95vw] lg:max-w-[90vw] xl:max-w-[85vw] 2xl:max-w-[1400px] mx-auto">
-                <motion.div 
+                <motion.div
                     className="text-center mb-12 sm:mb-16 md:mb-20"
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    <motion.h2 
+                    <motion.h2
                         className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 md:mb-5 bg-clip-text text-transparent bg-gradient-to-b from-white via-blue-100 to-blue-400 leading-tight px-2"
                         initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
@@ -55,7 +55,7 @@ export default function BentoGrid() {
                     >
                         Built for Roblox Developers
                     </motion.h2>
-                    <motion.p 
+                    <motion.p
                         className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed px-2"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -72,15 +72,15 @@ export default function BentoGrid() {
                             key={i}
                             initial={{ opacity: 0, y: 30, scale: 0.95 }}
                             whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ 
-                                duration: 0.6, 
-                                delay: i * 0.1, 
+                            transition={{
+                                duration: 0.6,
+                                delay: i * 0.1,
                                 ease: [0.16, 1, 0.3, 1],
                                 opacity: { duration: 0.5 },
                                 scale: { duration: 0.5 }
                             }}
                             viewport={{ once: true, margin: "-50px" }}
-                            whileHover={{ 
+                            whileHover={{
                                 y: -4,
                                 scale: 1.01,
                                 transition: { duration: 0.2, ease: "easeOut" }
@@ -92,30 +92,30 @@ export default function BentoGrid() {
                         >
 
                             <div className="relative z-10 flex flex-col h-full text-left">
-                                <motion.div 
+                                <motion.div
                                     className="p-2.5 sm:p-3.5 bg-white/5 w-fit rounded-xl backdrop-blur-sm group-hover:bg-white/10 transition-all duration-200 border border-white/5 group-hover:border-white/15 mb-3 sm:mb-4"
                                     initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
                                     whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.5, delay: i * 0.12 + 0.3, ease: [0.16, 1, 0.3, 1] }}
-                                    whileHover={{ 
-                                        scale: 1.1, 
+                                    whileHover={{
+                                        scale: 1.1,
                                         rotate: [0, -5, 5, -5, 0],
                                         transition: { duration: 0.5 }
                                     }}
                                 >
                                     <motion.div
-                                        animate={{ 
+                                        animate={{
                                             scale: [1, 1.1, 1],
                                         }}
-                                        transition={{ 
+                                        transition={{
                                             duration: 2,
                                             repeat: Infinity,
                                             repeatDelay: 3,
                                             ease: "easeInOut"
                                         }}
                                     >
-                                        <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white group-hover:text-gray-100 transition-colors duration-200" />
+                                        <feature.icon suppressHydrationWarning className="w-6 h-6 sm:w-7 sm:h-7 text-white group-hover:text-gray-100 transition-colors duration-200" />
                                     </motion.div>
                                 </motion.div>
 
@@ -125,13 +125,13 @@ export default function BentoGrid() {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: i * 0.12 + 0.4, ease: [0.16, 1, 0.3, 1] }}
                                 >
-                                    <motion.h3 
+                                    <motion.h3
                                         className="text-lg sm:text-xl md:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3 group-hover:text-gray-100 transition-colors duration-200 leading-tight"
                                         whileHover={{ x: 4, transition: { duration: 0.2 } }}
                                     >
                                         {feature.title}
                                     </motion.h3>
-                                    <motion.p 
+                                    <motion.p
                                         className="text-xs sm:text-sm md:text-sm lg:text-base text-white/80 group-hover:text-white leading-relaxed transition-colors duration-200"
                                         initial={{ opacity: 0 }}
                                         whileInView={{ opacity: 1 }}

@@ -7,9 +7,9 @@ export default function Navbar() {
                 <div className="flex h-16 items-center justify-between">
                     {/* Logo */}
                     <Link href="/" className="flex items-center">
-                        <img 
-                            src="/logo.svg" 
-                            alt="ClipRoblox Logo" 
+                        <img
+                            src="/logo.svg"
+                            alt="ClipRoblox Logo"
                             className="h-10 w-auto"
                             loading="eager"
                             decoding="async"
@@ -27,12 +27,19 @@ export default function Navbar() {
                         <Link href="/terms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
                             Terms
                         </Link>
+
                     </div>
 
                     {/* CTA Button */}
                     <div className="flex items-center gap-4">
                         <Link
-                            href="https://discord.gg/RJ5WuJVkc9"
+                            href="/contact"
+                            className="relative z-50 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/10 hover:border-white/20"
+                        >
+                            Contact Us
+                        </Link>
+                        <Link
+                            href="https://discord.gg/q5Ew3bQnB5"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-500 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-500/40"
