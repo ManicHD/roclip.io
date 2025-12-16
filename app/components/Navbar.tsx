@@ -1,43 +1,57 @@
+"use client";
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export default function Navbar() {
+    const pathname = usePathname();
+    const isContactPage = pathname === '/contact';
+
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/80 backdrop-blur-xl">
             <div className="mx-auto w-full max-w-7xl px-6 sm:px-8">
                 <div className="flex h-16 items-center justify-between">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center">
-                        <img
-                            src="/logo.svg"
-                            alt="ClipRoblox Logo"
-                            className="h-10 w-auto"
-                            loading="eager"
-                            decoding="async"
-                        />
+                    {/* Logo or Back Arrow */}
+                    <Link href="/" className="flex items-center text-white hover:text-blue-400 transition-colors">
+                        {isContactPage ? (
+                            <ArrowLeft suppressHydrationWarning className="h-6 w-6" />
+                        ) : (
+                            <img
+                                src="/logo.svg"
+                                alt="ClipRoblox Logo"
+                                className="h-10 w-auto"
+                                loading="eager"
+                                decoding="async"
+                            />
+                        )}
                     </Link>
 
-                    {/* Navigation Links */}
-                    <div className="hidden md:flex items-center gap-8">
-                        <Link href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
-                            Features
-                        </Link>
-                        <Link href="/privacy" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
-                            Privacy
-                        </Link>
-                        <Link href="/terms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
-                            Terms
-                        </Link>
-
-                    </div>
+                    {/* Navigation Links - Hidden on Contact Page */}
+                    {!isContactPage && (
+                        <div className="hidden md:flex items-center gap-8">
+                            <Link href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
+                                Features
+                            </Link>
+                            <Link href="/privacy" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
+                                Privacy
+                            </Link>
+                            <Link href="/terms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200">
+                                Terms
+                            </Link>
+                        </div>
+                    )}
 
                     {/* CTA Button */}
                     <div className="flex items-center gap-4">
-                        <Link
-                            href="/contact"
-                            className="relative z-50 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/10 hover:border-white/20"
-                        >
-                            Contact Us
-                        </Link>
+                        {!isContactPage && (
+                            <Link
+                                href="/contact"
+                                className="relative z-50 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/10 hover:border-white/20"
+                            >
+                                Contact Us
+                            </Link>
+                        )}
                         <Link
                             href="https://discord.gg/q5Ew3bQnB5"
                             target="_blank"

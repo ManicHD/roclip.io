@@ -14,7 +14,7 @@ const features = [
     },
     {
         title: "Millions of Views",
-        description: "Get millions of views and tens of creators promoting your game.",
+        description: "Get millions of views and hundreds of creators promoting your game.",
         icon: TrendingUp,
         className: "",
         gradient: "from-blue-400/20 to-blue-500/20",

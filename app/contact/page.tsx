@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+
 import ContactForm from "../components/ContactForm";
 
 export default function ContactPage() {
@@ -24,14 +24,7 @@ export default function ContactPage() {
                         </p>
 
                         <div className="flex flex-col gap-4 text-gray-400 text-sm sm:text-base items-center lg:items-start">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                                    <svg suppressHydrationWarning className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <span>manicbusinesses@gmail.com</span>
-                            </div>
+                            {/* Email removed as per request */}
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
                                     <svg suppressHydrationWarning className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,7 +40,7 @@ export default function ContactPage() {
                 </div>
             </section>
 
-            <Footer />
+            {/* Footer removed to avoid duplication with layout */}
         </main>
     );
 }
