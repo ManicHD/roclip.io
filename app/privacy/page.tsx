@@ -5,8 +5,8 @@ export default function PrivacyPolicy() {
     return (
         <main className="min-h-screen bg-black text-white py-20 px-8">
             <div className="max-w-4xl mx-auto">
-                <Link 
-                    href="/" 
+                <Link
+                    href="/"
                     className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">1. Introduction</h2>
                         <p>
-                            ClipRoblox ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our service.
+                            BloxClips Marketing LLC ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our service.
                         </p>
                     </section>
 

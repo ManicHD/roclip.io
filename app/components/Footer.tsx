@@ -18,7 +18,7 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
                 <div className="flex flex-col items-center md:items-start gap-2">
                     <p className="text-xs sm:text-sm text-gray-500 text-center md:text-left">
-                        © {new Date().getFullYear()} ClipRoblox. All rights reserved.
+                        © {new Date().getFullYear()} BloxClips Marketing LLC. All rights reserved.
                     </p>
                 </div>
 

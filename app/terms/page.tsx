@@ -5,8 +5,8 @@ export default function TermsOfService() {
     return (
         <main className="min-h-screen bg-black text-white py-20 px-8">
             <div className="max-w-4xl mx-auto">
-                <Link 
-                    href="/" 
+                <Link
+                    href="/"
                     className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -19,14 +19,14 @@ export default function TermsOfService() {
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
                         <p>
-                            By accessing and using ClipRoblox, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these terms, please do not use our service.
+                            By accessing and using BloxClips, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these terms, please do not use our service.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">2. Description of Service</h2>
                         <p>
-                            ClipRoblox is a platform that allows users to capture, edit, and share Roblox gameplay clips. We provide tools and services to help creators promote Roblox games through video content.
+                            BloxClips is a platform that connects content creators with Roblox game developers. We provide tools and services to help creators promote Roblox games through video content and earn money doing so.
                         </p>
                     </section>
 
@@ -57,14 +57,14 @@ export default function TermsOfService() {
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">5. Content Ownership</h2>
                         <p>
-                            You retain ownership of any content you upload to ClipRoblox. By uploading content, you grant us a license to use, display, and distribute your content on our platform. You are responsible for ensuring you have the right to upload and share any content you submit.
+                            You retain ownership of any content you upload to BloxClips. By uploading content, you grant us a license to use, display, and distribute your content on our platform. You are responsible for ensuring you have the right to upload and share any content you submit.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">6. Intellectual Property</h2>
                         <p>
-                            The ClipRoblox service, including its original content, features, and functionality, is owned by ClipRoblox and is protected by international copyright, trademark, and other intellectual property laws.
+                            The BloxClips service, including its original content, features, and functionality, is owned by BloxClips Marketing LLC and is protected by international copyright, trademark, and other intellectual property laws.
                         </p>
                     </section>
 
@@ -85,7 +85,7 @@ export default function TermsOfService() {
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">9. Limitation of Liability</h2>
                         <p>
-                            In no event shall ClipRoblox be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
+                            In no event shall BloxClips Marketing LLC be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
                         </p>
                     </section>
 

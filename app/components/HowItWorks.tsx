@@ -7,25 +7,19 @@ const steps = [
     {
         step: "01",
         title: "Choose a Campaign",
-        description: "Pick any active campaign you want to make a video for.",
+        description: "Browse active campaigns and pick games you want to promote.",
         icon: Megaphone,
     },
     {
         step: "02",
         title: "Create & Upload",
-        description: "Make your short/video, follow the campaign rules, and upload it publicly.",
+        description: "Make your short-form video, follow the rules, and post it publicly.",
         icon: Video,
     },
     {
         step: "03",
-        title: "Submit Your Video",
-        description: "Go to the submission channel, click Submit Video, and paste your link.",
-        icon: Send,
-    },
-    {
-        step: "04",
-        title: "Earn From Your Views",
-        description: "For every 1,000 approved views, you get paid.",
+        title: "Earn From Views",
+        description: "For every 1,000 approved views, you get paid. It's that simple.",
         icon: Banknote,
     },
 ];
@@ -45,7 +39,7 @@ export default function HowItWorks() {
                         How It Works
                     </h2>
                     <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                        Start earning from your existing content in 5 simple steps.
+                        Start earning in 3 simple steps.
                     </p>
                 </motion.div>
 
@@ -53,7 +47,7 @@ export default function HowItWorks() {
                     {/* Connection Line (Desktop) */}
                     <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-blue-900/20 via-blue-500/20 to-violet-900/20 -translate-y-1/2 z-0" />
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                         {steps.map((item, index) => (
                             <motion.div
                                 key={index}
