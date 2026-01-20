@@ -69,19 +69,13 @@ export const metadata: Metadata = {
     url: "https://bloxclips.com",
     siteName: "BloxClips",
     title: "BloxClips - Earn Money Making Roblox Videos",
-    description: "Connect with Roblox game developers, create clips, and earn money. The #1 Roblox clipping and creator platform.",
+    description: "The #1 Roblox clipping and creator platform.",
     images: [
       {
         url: "/og-banner.png",
         width: 1200,
         height: 630,
-        alt: "BloxClips - Roblox Clipping Platform",
-      },
-      {
-        url: "/logo.png",
-        width: 512,
-        height: 512,
-        alt: "BloxClips Logo",
+        alt: "BloxClips - Clip Roblox Games",
       },
     ],
   },
