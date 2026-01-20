@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialize to avoid build-time errors
+let resend: Resend | null = null;
+function getResend() {
+    if (!resend && process.env.RESEND_API_KEY) {
+        resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resend;
+}
 const LOGO_URL = 'https://bloxclips.com/logo.png';
 
 // Brand design system - Refined for Floating Dark Theme
@@ -142,7 +149,12 @@ export async function POST(request: Request) {
 </html>
         `.trim();
 
-        const { data, error } = await resend.emails.send({
+        const resendClient = getResend();
+        if (!resendClient) {
+            return NextResponse.json({ error: 'Email service not configured' }, { status: 500 });
+        }
+
+        const { data, error } = await resendClient.emails.send({
             from: `BloxClips Contact <${fromEmail}>`,
             to: toEmail,
             subject: `New Message: ${name}`,
