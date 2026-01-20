@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
     TrendingUp,
     DollarSign,
@@ -14,6 +15,7 @@ import {
     Upload,
     Eye,
     Link2,
+    ChevronRight,
 } from "lucide-react";
 import { useAuth } from "./layout";
 import ConnectSocialsModal from "../components/ConnectSocialsModal";
@@ -340,6 +342,11 @@ export default function DashboardPage() {
                 />
             </div>
 
+            {/* Report Issue / Socials */}
+            <div className="flex justify-end mb-4">
+                {/* (Optional: moved logic if needed, but keeping consistent with request) */}
+            </div>
+
             {/* Chart Card */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -354,7 +361,7 @@ export default function DashboardPage() {
                             <Eye className="h-5 w-5 text-blue-400" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-white">Views</h2>
+                            <h2 className="text-lg font-semibold text-white">Performance Overview</h2>
                             <p className="text-sm text-gray-400">{periodLabels[selectedPeriod]}</p>
                         </div>
                     </div>
@@ -407,108 +414,55 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Main Views Chart */}
-                <FullChart
-                    data={chartData}
-                    color="text-blue-400"
-                    gradientFrom="from-blue-600"
-                    gradientTo="to-blue-400"
-                    dataKey="views"
-                    label="Views"
-                    formatValue={formatNumber}
-                />
+                {/* Main Charts */}
+                <div className="space-y-8">
+                    {/* Views Chart */}
+                    <FullChart
+                        data={chartData}
+                        color="text-blue-400"
+                        gradientFrom="from-blue-600"
+                        gradientTo="to-blue-400"
+                        dataKey="views"
+                        label="Views"
+                        formatValue={formatNumber}
+                    />
 
-                {/* Detailed Stats (expandable) */}
-                <AnimatePresence>
-                    {showDetailedStats && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="mt-8 space-y-8 border-t border-white/10 pt-8"
-                        >
-                            {/* Earnings Chart */}
-                            <FullChart
-                                data={chartData}
-                                color="text-green-400"
-                                gradientFrom="from-green-600"
-                                gradientTo="to-green-400"
-                                dataKey="earnings"
-                                label="Earnings"
-                                formatValue={formatMoney}
-                            />
+                    {/* Earnings Chart */}
+                    <FullChart
+                        data={chartData}
+                        color="text-green-400"
+                        gradientFrom="from-green-600"
+                        gradientTo="to-green-400"
+                        dataKey="earnings"
+                        label="Earnings"
+                        formatValue={formatMoney}
+                    />
 
-                            {/* Uploads Chart */}
-                            <FullChart
-                                data={chartData}
-                                color="text-purple-400"
-                                gradientFrom="from-purple-600"
-                                gradientTo="to-purple-400"
-                                dataKey="submissions"
-                                label="Uploads"
-                                formatValue={(v) => v.toString()}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                    {/* Detailed Stats (expandable) */}
+                    <AnimatePresence>
+                        {showDetailedStats && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-8"
+                            >
+                                {/* Uploads Chart */}
+                                <FullChart
+                                    data={chartData}
+                                    color="text-purple-400"
+                                    gradientFrom="from-purple-600"
+                                    gradientTo="to-purple-400"
+                                    dataKey="submissions"
+                                    label="Uploads"
+                                    formatValue={(v) => v.toString()}
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </motion.div>
-
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.5 }}
-                    className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6"
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="rounded-xl bg-purple-500/10 p-2">
-                            <Video className="h-5 w-5 text-purple-400" />
-                        </div>
-                        <h3 className="font-medium text-white">Total Videos</h3>
-                    </div>
-                    <p className="text-3xl font-bold text-white">
-                        {(stats?.acceptedVideos || 0) +
-                            (stats?.pendingVideos || 0) +
-                            (stats?.deniedVideos || 0)}
-                    </p>
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
-                    className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6"
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="rounded-xl bg-yellow-500/10 p-2">
-                            <Clock className="h-5 w-5 text-yellow-400" />
-                        </div>
-                        <h3 className="font-medium text-white">Pending Review</h3>
-                    </div>
-                    <p className="text-3xl font-bold text-white">
-                        {stats?.pendingVideos || 0}
-                    </p>
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.7 }}
-                    className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6"
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="rounded-xl bg-cyan-500/10 p-2">
-                            <TrendingUp className="h-5 w-5 text-cyan-400" />
-                        </div>
-                        <h3 className="font-medium text-white">Active Campaigns</h3>
-                    </div>
-                    <p className="text-3xl font-bold text-white">
-                        {stats?.activeCampaigns || 0}
-                    </p>
-                </motion.div>
-            </div>
 
             {/* Connect Socials Modal */}
             {user && (

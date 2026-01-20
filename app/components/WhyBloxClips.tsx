@@ -7,7 +7,7 @@ const reasons = [
     {
         icon: Target,
         title: "Beyond Traditional Sponsors",
-        description: "Roblox sponsors reach players in-game. We reach them everywhere else — YouTube, TikTok, Instagram. Digital influence drives real downloads.",
+        description: "Roblox sponsors reach players in-game. We reach them everywhere else - YouTube, TikTok, Instagram.",
         gradient: "from-blue-500 to-cyan-500",
     },
     {
@@ -25,7 +25,7 @@ const reasons = [
     {
         icon: Shield,
         title: "Quality Controlled",
-        description: "Every submission is manually reviewed. No bots, no fake views — only real engagement from real creators.",
+        description: "Every submission is manually reviewed. No bots, no fake views - only real engagement from real creators.",
         gradient: "from-orange-500 to-yellow-500",
     },
     {
@@ -37,40 +37,42 @@ const reasons = [
     {
         icon: Zap,
         title: "Launch in Minutes",
-        description: "Create a campaign, fund it, and watch creators start promoting within hours. No minimums.",
+        description: "Create a campaign, fund it, and watch creators start promoting fast.",
         gradient: "from-indigo-500 to-blue-500",
     },
 ];
 
 export default function WhyBloxClips() {
     return (
-        <section className="py-24 bg-black relative overflow-hidden">
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-950/20 via-black to-black" />
+        <section className="py-32 bg-black relative overflow-hidden">
+            {/* Background Layer */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-blue-950/10 to-black pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black opacity-40 pointer-events-none" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <motion.div
-                    className="text-center mb-16"
+                    className="text-center mb-20"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
                 >
-                    <span className="inline-block px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
-                        Why Choose BloxClips
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-6 tracking-wide uppercase">
+                        The BloxClips Advantage
                     </span>
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                    <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-8 leading-[1.1]">
                         What Roblox Sponsors{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
                             Can&apos;t Do
                         </span>
                     </h2>
-                    <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                        In-game sponsors reach players already playing. We reach millions who haven&apos;t discovered your game yet — through the content they actually watch.
+                    <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-light">
+                        Traditional ads only reach players <span className="text-white font-medium">already on Roblox</span>.
+                        We reach the millions <span className="text-white font-medium">who haven&apos;t discovered you yet</span>.
                     </p>
                 </motion.div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {reasons.map((reason, index) => (
                         <motion.div
                             key={index}
@@ -78,42 +80,55 @@ export default function WhyBloxClips() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="group relative p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300"
+                            className="group relative h-full"
                         >
-                            {/* Icon */}
-                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${reason.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                <reason.icon className="w-6 h-6 text-white" />
-                            </div>
+                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="relative h-full p-8 rounded-3xl border border-white/5 bg-neutral-900/50 backdrop-blur-sm group-hover:border-white/10 transition-all duration-300">
+                                <div className="flex flex-col items-center text-center">
+                                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${reason.gradient} flex items-center justify-center mb-6 shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+                                        <reason.icon className="w-8 h-8 text-white" />
+                                    </div>
 
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                {reason.title}
-                            </h3>
-                            <p className="text-gray-400 leading-relaxed">
-                                {reason.description}
-                            </p>
+                                    <h3 className="text-xl font-bold text-white mb-4">
+                                        {reason.title}
+                                    </h3>
+                                    <p className="text-gray-400 leading-relaxed font-light">
+                                        {reason.description}
+                                    </p>
+                                </div>
+                            </div>
                         </motion.div>
                     ))}
                 </div>
 
-                {/* Stats Row */}
+                {/* Bottom Stats */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    className="mt-16 grid grid-cols-2 gap-8 max-w-md mx-auto"
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="mt-20 p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-md w-full max-w-3xl mx-auto relative overflow-hidden group"
                 >
-                    {[
-                        { value: "50M+", label: "Creator Subscribers" },
-                        { value: "1B+", label: "Views Generated" },
-                    ].map((stat, index) => (
-                        <div key={index} className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-1">
-                                {stat.value}
+                    <div className="absolute inset-0 bg-blue-500/10 blur-[100px] group-hover:bg-blue-500/20 transition-colors duration-700" />
+
+                    <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
+                        <div className="text-center border-b sm:border-b-0 sm:border-r border-white/10 pb-8 sm:pb-0">
+                            <div className="text-5xl lg:text-6xl font-black text-white tracking-tighter mb-2">
+                                50M+
                             </div>
-                            <div className="text-sm text-gray-500">{stat.label}</div>
+                            <div className="text-blue-300 font-medium tracking-widest uppercase text-sm">
+                                Creator Subscribers
+                            </div>
                         </div>
-                    ))}
+                        <div className="text-center">
+                            <div className="text-5xl lg:text-6xl font-black text-white tracking-tighter mb-2">
+                                100M+
+                            </div>
+                            <div className="text-blue-300 font-medium tracking-widest uppercase text-sm">
+                                Views Generated
+                            </div>
+                        </div>
+                    </div>
                 </motion.div>
             </div>
         </section>

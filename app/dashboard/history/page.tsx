@@ -24,6 +24,7 @@ interface Submission {
     manualViewCount?: number;
     frozenViewCount?: number;
     videoType: string;
+    videoTitle?: string;
     estimatedEarnings: number;
     createdAt: string;
     campaign: {
@@ -115,11 +116,13 @@ function SubmissionRow({
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-white truncate">
-                        {submission.campaign.name}
+                        {submission.videoTitle || submission.campaign.name}
                     </span>
-                    <span className="text-xs text-gray-500">
-                        {submission.campaign.game}
-                    </span>
+                    {submission.videoTitle && (
+                        <span className="text-xs text-gray-500 hidden lg:inline">
+                            ({submission.campaign.name})
+                        </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                     <span className="capitalize">{submission.platform}</span>
@@ -137,9 +140,9 @@ function SubmissionRow({
                     <div className="text-right">
                         <div className="flex items-center gap-1.5">
                             <p className="text-sm font-medium text-white">
-                                {(submission.frozenViewCount ?? submission.manualViewCount ?? submission.currentViews).toLocaleString()}
+                                {(submission.manualViewCount ?? submission.frozenViewCount ?? submission.currentViews).toLocaleString()}
                             </p>
-                            {(submission.manualViewCount || submission.frozenViewCount) && (
+                            {submission.manualViewCount && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-medium">
                                     MANUAL
                                 </span>

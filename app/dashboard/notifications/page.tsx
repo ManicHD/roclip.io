@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Mail, Check, X, Loader } from "lucide-react";
+import { motion } from "framer-motion";
+import { Bell, Mail, Check, X, Loader, Save } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -89,21 +90,23 @@ export default function NotificationsPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-2xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white mb-2">Notification Settings</h1>
-                <p className="text-gray-400">
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-white">Notification Settings</h1>
+                <p className="text-sm text-gray-400 mt-1">
                     Manage how you receive notifications about campaigns and announcements
                 </p>
             </div>
 
             {/* Message */}
             {message && (
-                <div
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className={`mb-6 p-4 rounded-xl border flex items-center gap-3 ${message.type === "success"
-                            ? "bg-green-500/10 border-green-500/20 text-green-400"
-                            : "bg-red-500/10 border-red-500/20 text-red-400"
+                        ? "bg-green-500/10 border-green-500/20 text-green-400"
+                        : "bg-red-500/10 border-red-500/20 text-red-400"
                         }`}
                 >
                     {message.type === "success" ? (
@@ -112,12 +115,17 @@ export default function NotificationsPage() {
                         <X className="h-5 w-5 flex-shrink-0" />
                     )}
                     <p className="text-sm font-medium">{message.text}</p>
-                </div>
+                </motion.div>
             )}
 
-            {/* Email Settings */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
-                <div className="flex items-center gap-3 mb-4">
+            {/* Main Settings Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl"
+            >
+                <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-blue-500/10 rounded-lg">
                         <Mail className="h-5 w-5 text-blue-400" />
                     </div>
@@ -129,7 +137,7 @@ export default function NotificationsPage() {
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {/* Email Input */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -151,131 +159,80 @@ export default function NotificationsPage() {
                     </div>
 
                     {/* Email Preferences */}
-                    <div className="space-y-3 pt-4 border-t border-white/10">
+                    <div className="space-y-4 pt-4 border-t border-white/10">
                         <p className="text-sm font-medium text-gray-300">
                             Send me emails about:
                         </p>
 
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={preferences.emailOnCampaignLaunch}
-                                onChange={(e) =>
-                                    setPreferences({
-                                        ...preferences,
-                                        emailOnCampaignLaunch: e.target.checked,
-                                    })
+                        <div className="space-y-2">
+                            {[
+                                {
+                                    key: 'emailOnCampaignLaunch',
+                                    title: '🚀 New Campaign Launches',
+                                    desc: 'Get notified when new campaigns are available'
+                                },
+                                {
+                                    key: 'emailOnAnnouncement',
+                                    title: '📢 Important Announcements',
+                                    desc: 'Stay updated with platform news and updates'
+                                },
+                                {
+                                    key: 'emailOnCampaignUpdate',
+                                    title: '📝 Campaign Updates',
+                                    desc: "Alerts about changes to campaigns you've joined"
                                 }
-                                className="w-5 h-5 rounded border-2 border-white/20 bg-black/50 checked:bg-blue-500 checked:border-blue-500 cursor-pointer transition-colors"
-                            />
-                            <div className="flex-1">
-                                <p className="text-white font-medium group-hover:text-blue-400 transition-colors">
-                                    🚀 New Campaign Launches
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                    Get notified when new campaigns are available
-                                </p>
-                            </div>
-                        </label>
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                                    <div className="relative flex items-center flex-shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={preferences[item.key as keyof NotificationPreferences] as boolean}
+                                            onChange={(e) =>
+                                                setPreferences({
+                                                    ...preferences,
+                                                    [item.key]: e.target.checked,
+                                                })
+                                            }
+                                            className="w-5 h-5 rounded border-2 border-white/20 bg-black/50 checked:bg-blue-500 checked:border-blue-500 cursor-pointer transition-colors appearance-none"
+                                        />
+                                        <Check className={`h-3.5 w-3.5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-opacity ${preferences[item.key as keyof NotificationPreferences] ? 'opacity-100' : 'opacity-0'
+                                            }`} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-white font-medium group-hover:text-blue-400 transition-colors truncate">
+                                            {item.title}
+                                        </p>
+                                        <p className="text-sm text-gray-500 truncate">
+                                            {item.desc}
+                                        </p>
+                                    </div>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
 
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={preferences.emailOnAnnouncement}
-                                onChange={(e) =>
-                                    setPreferences({
-                                        ...preferences,
-                                        emailOnAnnouncement: e.target.checked,
-                                    })
-                                }
-                                className="w-5 h-5 rounded border-2 border-white/20 bg-black/50 checked:bg-blue-500 checked:border-blue-500 cursor-pointer transition-colors"
-                            />
-                            <div className="flex-1">
-                                <p className="text-white font-medium group-hover:text-blue-400 transition-colors">
-                                    📢 Important Announcements
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                    Stay updated with platform news and updates
-                                </p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={preferences.emailOnCampaignUpdate}
-                                onChange={(e) =>
-                                    setPreferences({
-                                        ...preferences,
-                                        emailOnCampaignUpdate: e.target.checked,
-                                    })
-                                }
-                                className="w-5 h-5 rounded border-2 border-white/20 bg-black/50 checked:bg-blue-500 checked:border-blue-500 cursor-pointer transition-colors"
-                            />
-                            <div className="flex-1">
-                                <p className="text-white font-medium group-hover:text-blue-400 transition-colors">
-                                    📝 Campaign Updates
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                    Alerts about changes to campaigns you've joined
-                                </p>
-                            </div>
-                        </label>
+                    {/* Save Button (Inside Card) */}
+                    <div className="pt-2">
+                        <button
+                            onClick={savePreferences}
+                            disabled={saving}
+                            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:brightness-110 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                        >
+                            {saving ? (
+                                <>
+                                    <Loader className="h-5 w-5 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-5 w-5" />
+                                    Save Preferences
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            {/* In-App Notifications Info */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-purple-500/10 rounded-lg">
-                        <Bell className="h-5 w-5 text-purple-400" />
-                    </div>
-                    <div>
-                        <h2 className="text-lg font-semibold text-white">In-App Notifications</h2>
-                        <p className="text-sm text-gray-400">
-                            Always enabled - You'll see notifications in the dashboard
-                        </p>
-                    </div>
-                </div>
-                <div className="space-y-2 text-sm text-gray-400">
-                    <p className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-400" />
-                        New campaign launch popups
-                    </p>
-                    <p className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-400" />
-                        Notification bell with unread counter
-                    </p>
-                    <p className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-400" />
-                        Real-time updates on campaign changes
-                    </p>
-                </div>
-            </div>
-
-            {/* Save Button */}
-            <button
-                onClick={savePreferences}
-                disabled={saving}
-                className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-                {saving ? (
-                    <>
-                        <Loader className="h-5 w-5 animate-spin" />
-                        Saving...
-                    </>
-                ) : (
-                    <>
-                        <Check className="h-5 w-5" />
-                        Save Preferences
-                    </>
-                )}
-            </button>
-
-            <p className="text-center text-sm text-gray-500 mt-4">
-                Changes are saved automatically to your account
-            </p>
+            </motion.div>
         </div>
     );
 }

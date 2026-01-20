@@ -39,6 +39,7 @@ interface EligibleUser {
 export default function AdminDashboard() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [eligibleUsers, setEligibleUsers] = useState<EligibleUser[]>([]);
+    const [totalPending, setTotalPending] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -61,6 +62,7 @@ export default function AdminDashboard() {
 
                 setStats(statsData);
                 setEligibleUsers(eligibleData.eligibleUsers || []);
+                setTotalPending(eligibleData.totalPending || 0);
             } catch (err) {
                 console.error("Error fetching admin data:", err);
                 setError("Failed to load admin data");
@@ -76,6 +78,16 @@ export default function AdminDashboard() {
         if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
         if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
         return num.toString();
+    };
+
+    // Color style mapping for stat cards (fixes Tailwind dynamic class issue)
+    const colorStyles: Record<string, { bg: string; text: string; border?: string }> = {
+        blue: { bg: "bg-blue-500/10", text: "text-blue-400" },
+        green: { bg: "bg-green-500/10", text: "text-green-400" },
+        purple: { bg: "bg-purple-500/10", text: "text-purple-400" },
+        cyan: { bg: "bg-cyan-500/10", text: "text-cyan-400" },
+        yellow: { bg: "bg-yellow-500/10", text: "text-yellow-400" },
+        emerald: { bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/30" },
     };
 
     if (loading) {
@@ -135,6 +147,14 @@ export default function AdminDashboard() {
             color: "yellow",
             href: "/dashboard/admin/users",
         },
+        {
+            title: "Ready for Payout",
+            value: `$${totalPending.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            suffix: `(${eligibleUsers.filter(u => u.stripeReady).length} ready)`,
+            icon: TrendingUp,
+            color: "emerald",
+            href: "/dashboard/admin/users",
+        },
     ];
 
     return (
@@ -150,22 +170,47 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {statCards.map((stat, index) => (
-                    <motion.div
-                        key={stat.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: index * 0.1 }}
-                    >
-                        {stat.href ? (
-                            <Link href={stat.href}>
-                                <div className={`p-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all group cursor-pointer`}>
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className={`p-2 rounded-xl bg-${stat.color}-500/10`}>
-                                            <stat.icon className={`h-5 w-5 text-${stat.color}-400`} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {statCards.map((stat, index) => {
+                    const colors = colorStyles[stat.color] || colorStyles.blue;
+                    const isHighlight = stat.color === "emerald";
+
+                    return (
+                        <motion.div
+                            key={stat.title}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: index * 0.1 }}
+                        >
+                            {stat.href ? (
+                                <Link href={stat.href}>
+                                    <div className={`p-5 rounded-2xl border backdrop-blur-xl transition-all group cursor-pointer ${isHighlight
+                                            ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-green-500/5 hover:from-emerald-500/15 hover:to-green-500/10'
+                                            : 'border-white/10 bg-white/5 hover:bg-white/10'
+                                        }`}>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className={`p-2 rounded-xl ${colors.bg}`}>
+                                                <stat.icon className={`h-5 w-5 ${colors.text}`} />
+                                            </div>
+                                            <ArrowRight className="h-4 w-4 text-gray-500 group-hover:text-white transition-colors" />
                                         </div>
-                                        <ArrowRight className="h-4 w-4 text-gray-500 group-hover:text-white transition-colors" />
+                                        <p className={`text-2xl font-bold ${isHighlight ? 'text-emerald-400' : 'text-white'}`}>
+                                            {stat.value}
+                                            {stat.suffix && (
+                                                <span className={`text-sm font-normal ml-1 ${isHighlight ? 'text-emerald-300/70' : 'text-gray-400'}`}>
+                                                    {stat.suffix}
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className={`text-sm mt-1 ${isHighlight ? 'text-emerald-300/80' : 'text-gray-400'}`}>{stat.title}</p>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className={`p-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className={`p-2 rounded-xl ${colors.bg}`}>
+                                            <stat.icon className={`h-5 w-5 ${colors.text}`} />
+                                        </div>
                                     </div>
                                     <p className="text-2xl font-bold text-white">
                                         {stat.value}
@@ -177,20 +222,10 @@ export default function AdminDashboard() {
                                     </p>
                                     <p className="text-sm text-gray-400 mt-1">{stat.title}</p>
                                 </div>
-                            </Link>
-                        ) : (
-                            <div className={`p-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl`}>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className={`p-2 rounded-xl bg-${stat.color}-500/10`}>
-                                        <stat.icon className={`h-5 w-5 text-${stat.color}-400`} />
-                                    </div>
-                                </div>
-                                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                                <p className="text-sm text-gray-400 mt-1">{stat.title}</p>
-                            </div>
-                        )}
-                    </motion.div>
-                ))}
+                            )}
+                        </motion.div>
+                    );
+                })}
             </div>
 
             {/* Announcements Quick Access */}
@@ -220,6 +255,8 @@ export default function AdminDashboard() {
                     </div>
                 </Link>
             </motion.div>
+
+
 
             {/* Eligible for Payout */}
             <motion.div

@@ -14,25 +14,30 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 
 export default function Footer() {
     return (
-        <footer className="border-t border-white/5 bg-black py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
-                <div className="flex flex-col items-center md:items-start gap-2">
-                    <p className="text-xs sm:text-sm text-gray-500 text-center md:text-left">
-                        © {new Date().getFullYear()} BloxClips Marketing LLC. All rights reserved.
+        <footer className="border-t border-white/5 bg-black pt-24 pb-12 px-6">
+            <div className="max-w-7xl mx-auto flex flex-col items-center">
+                {/* Big Branding */}
+                <div className="mb-16 text-center">
+                    <h2 className="text-4xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white/20 to-white/5 opacity-50 tracking-tighter mb-8 select-none">
+                        BLOXCLIPS
+                    </h2>
+                    <div className="flex justify-center gap-6">
+                        <Link href="https://discord.gg/q5Ew3bQnB5" target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 group">
+                            <DiscordIcon className="h-6 w-6 text-gray-400 group-hover:text-white" />
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="w-full border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-500">
+                    <p>
+                        © {new Date().getFullYear()} BloxClips Marketing LLC.
                     </p>
-                </div>
-
-                <div className="flex gap-4 sm:gap-5">
-                    <Link href="https://discord.gg/q5Ew3bQnB5" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors duration-200 p-2 hover:bg-white/5 rounded-lg">
-                        <DiscordIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </Link>
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
-                    <Link href="/" className="hover:text-white transition-colors duration-200">Home</Link>
-                    <Link href="/privacy" className="hover:text-white transition-colors duration-200">Privacy</Link>
-                    <Link href="/terms" className="hover:text-white transition-colors duration-200">Terms</Link>
-                    <Link href="/contact" className="hover:text-white transition-colors duration-200">Contact</Link>
+                    <div className="flex gap-8">
+                        <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+                        <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+                    </div>
                 </div>
             </div>
         </footer>

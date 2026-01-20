@@ -21,6 +21,7 @@ import {
     Edit3,
     Save,
     X,
+    RotateCcw,
 } from "lucide-react";
 import ConfirmModal from "@/app/components/ConfirmModal";
 
@@ -40,6 +41,7 @@ interface Submission {
     videoLink: string;
     platform: string;
     videoType: string;
+    videoTitle?: string;
     currentViews: number;
     manualViewCount?: number;
     status: string;
@@ -71,6 +73,10 @@ interface UserDetail {
     minimumPayout: number;
     stripeConnected: boolean;
     stripeOnboardingComplete: boolean;
+    stripeEmail?: string;
+    paypalConnected: boolean;
+    paypalEmail?: string;
+    preferredPaymentMethod?: string;
     submissions: Submission[];
     payoutHistory: Payout[];
 }
@@ -227,6 +233,44 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                 delete updated[submissionId];
                 return updated;
             });
+        }
+    };
+
+    const handleRevertToLive = async (submissionId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Revert to Live Views",
+            message: "Remove manual override and use live view count?",
+            variant: "warning",
+            onConfirm: () => revertToLiveConfirmed(submissionId),
+        });
+    };
+
+    const revertToLiveConfirmed = async (submissionId: number) => {
+        try {
+            const res = await fetch(
+                `${API_URL}/api/admin/submissions/${submissionId}/views`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ manualViewCount: null }),
+                }
+            );
+
+            if (!res.ok) throw new Error("Failed to revert views");
+
+            // Refresh user data
+            const refreshRes = await fetch(
+                `${API_URL}/api/admin/users/${resolvedParams.userId}`,
+                { credentials: "include" }
+            );
+            if (refreshRes.ok) {
+                const refreshData = await refreshRes.json();
+                setUser(refreshData);
+            }
+        } catch (err) {
+            setError("Failed to revert to live views");
         }
     };
 
@@ -402,16 +446,48 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {/* Stripe Status */}
                         {user.stripeConnected ? (
-                            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20">
+                            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${user.preferredPaymentMethod === 'stripe'
+                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                : 'bg-green-500/10 text-green-400 border-green-500/20'
+                                }`}>
                                 <CheckCircle className="h-4 w-4" />
-                                Stripe Connected
+                                Stripe
+                                {user.preferredPaymentMethod === 'stripe' && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20">PREFERRED</span>
+                                )}
+                                {user.stripeEmail && (
+                                    <span className="text-xs text-gray-400 hidden sm:inline">({user.stripeEmail})</span>
+                                )}
                             </span>
                         ) : (
-                            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 text-gray-400 border border-white/10">
                                 <AlertCircle className="h-4 w-4" />
-                                Stripe Not Connected
+                                No Stripe
+                            </span>
+                        )}
+
+                        {/* PayPal Status */}
+                        {user.paypalConnected ? (
+                            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${user.preferredPaymentMethod === 'paypal'
+                                ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                : 'bg-green-500/10 text-green-400 border-green-500/20'
+                                }`}>
+                                <CheckCircle className="h-4 w-4" />
+                                PayPal
+                                {user.preferredPaymentMethod === 'paypal' && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20">PREFERRED</span>
+                                )}
+                                {user.paypalEmail && (
+                                    <span className="text-xs text-gray-400 hidden sm:inline">({user.paypalEmail})</span>
+                                )}
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 text-gray-400 border border-white/10">
+                                <AlertCircle className="h-4 w-4" />
+                                No PayPal
                             </span>
                         )}
                     </div>
@@ -474,31 +550,43 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                 )}
 
                 <div className="mt-6 flex items-center gap-4 flex-wrap">
-                    {user.eligible && user.stripeConnected ? (
-                        <button
-                            onClick={handleProcessPayout}
-                            disabled={processing}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {processing ? (
-                                <>
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    <DollarSign className="h-5 w-5" />
-                                    Process Payout (${user.pendingBalance.toFixed(2)})
-                                </>
-                            )}
-                        </button>
+                    {user.eligible && (user.stripeConnected || user.paypalConnected) ? (
+                        <>
+                            <button
+                                onClick={handleProcessPayout}
+                                disabled={processing}
+                                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {processing ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <DollarSign className="h-5 w-5" />
+                                        Process Payout (${user.pendingBalance.toFixed(2)})
+                                    </>
+                                )}
+                            </button>
+                            <span className="text-sm text-gray-400">
+                                via {user.preferredPaymentMethod === 'paypal'
+                                    ? 'PayPal'
+                                    : user.preferredPaymentMethod === 'stripe'
+                                        ? 'Stripe'
+                                        : user.stripeConnected
+                                            ? 'Stripe'
+                                            : 'PayPal'
+                                }
+                            </span>
+                        </>
                     ) : (
                         <div className="text-gray-400 text-sm">
                             {!user.eligible && (
                                 <p>Balance below ${user.minimumPayout} minimum (needs ${(user.minimumPayout - user.pendingBalance).toFixed(2)} more)</p>
                             )}
-                            {user.eligible && !user.stripeConnected && (
-                                <p>User needs to connect Stripe before receiving payouts</p>
+                            {user.eligible && !user.stripeConnected && !user.paypalConnected && (
+                                <p>User needs to connect Stripe or PayPal before receiving payouts</p>
                             )}
                         </div>
                     )}
@@ -591,11 +679,11 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                             >
                                 <div className="flex items-center gap-3 flex-1">
                                     <div className="flex flex-col flex-1">
-                                        <span className="text-sm font-medium text-white">
-                                            {sub.campaignName}
+                                        <span className="text-sm font-medium text-white truncate max-w-xs" title={sub.videoTitle}>
+                                            {sub.videoTitle || sub.campaignName}
                                         </span>
                                         <span className="text-xs text-gray-500">
-                                            {sub.platform} · {sub.videoType} · {formatDate(sub.createdAt)}
+                                            {sub.videoTitle ? `${sub.campaignName} · ` : ''}{sub.platform} · {sub.videoType} · {formatDate(sub.createdAt)}
                                         </span>
                                     </div>
                                 </div>
@@ -659,9 +747,19 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                                             )}
                                         </div>
                                         {sub.manualViewCount && (
-                                            <span className="text-xs text-yellow-400 mt-1">
-                                                Manual ({sub.currentViews.toLocaleString()} actual)
-                                            </span>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs text-yellow-400">
+                                                    Manual ({sub.currentViews.toLocaleString()} actual)
+                                                </span>
+                                                <button
+                                                    onClick={() => handleRevertToLive(sub.id)}
+                                                    className="flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors"
+                                                    title="Revert to live views"
+                                                >
+                                                    <RotateCcw className="h-3 w-3" />
+                                                    Live
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
 

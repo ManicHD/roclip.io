@@ -61,6 +61,8 @@ export default function PaymentPage() {
     const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
     const [disconnectMethod, setDisconnectMethod] = useState<PaymentMethod | null>(null);
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("stripe");
+    const [preferredMethod, setPreferredMethod] = useState<PaymentMethod | null>(null);
+    const [savingPreference, setSavingPreference] = useState(false);
     const [paypalEmail, setPaypalEmail] = useState("");
     const [connectingPaypal, setConnectingPaypal] = useState(false);
 
@@ -111,6 +113,43 @@ export default function PaymentPage() {
         }
     };
 
+    const fetchPaymentPreference = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/stats/payment-preference`, {
+                credentials: "include",
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.preferredPaymentMethod) {
+                setPreferredMethod(data.preferredPaymentMethod);
+                setSelectedMethod(data.preferredPaymentMethod);
+            } else if (data.effectivePreference) {
+                setSelectedMethod(data.effectivePreference);
+            }
+        } catch (err) {
+            console.error("Error fetching payment preference:", err);
+        }
+    };
+
+    const savePaymentPreference = async (method: PaymentMethod) => {
+        setSavingPreference(true);
+        try {
+            const res = await fetch(`${API_URL}/api/stats/payment-preference`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ method }),
+            });
+            if (!res.ok) throw new Error("Failed to save preference");
+            setPreferredMethod(method);
+        } catch (err) {
+            console.error("Error saving payment preference:", err);
+            setError("Failed to save payment preference");
+        } finally {
+            setSavingPreference(false);
+        }
+    };
+
     const fetchPayouts = async () => {
         try {
             const res = await fetch(`${API_URL}/api/stripe/payouts`, {
@@ -125,7 +164,7 @@ export default function PaymentPage() {
     };
 
     useEffect(() => {
-        Promise.all([fetchStripeStatus(), fetchPayPalStatus(), fetchPayouts(), fetchBalance()]).finally(() =>
+        Promise.all([fetchStripeStatus(), fetchPayPalStatus(), fetchPayouts(), fetchBalance(), fetchPaymentPreference()]).finally(() =>
             setLoading(false)
         );
     }, []);
@@ -360,6 +399,30 @@ export default function PaymentPage() {
                     )}
 
                     {/* Payment Method Selection */}
+                    {/* Preferred Method Indicator (when both connected) */}
+                    {stripeStatus?.connected && stripeStatus?.payoutsEnabled && paypalStatus?.connected && (
+                        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/10 mb-4">
+                            <div className="flex items-center justify-between flex-wrap gap-3">
+                                <div>
+                                    <p className="text-sm font-medium text-white">Both payment methods connected</p>
+                                    <p className="text-xs text-gray-400">
+                                        {preferredMethod
+                                            ? `Payouts will be sent to ${preferredMethod === 'stripe' ? 'Stripe (Bank)' : 'PayPal'}`
+                                            : 'Select a preferred method for payouts'}
+                                    </p>
+                                </div>
+                                {preferredMethod && (
+                                    <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${preferredMethod === 'stripe'
+                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                        : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                        }`}>
+                                        {preferredMethod === 'stripe' ? '🏦 Stripe' : '💳 PayPal'} is Preferred
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         {/* Stripe Card */}
                         <button
@@ -370,7 +433,12 @@ export default function PaymentPage() {
                                 }`}
                         >
                             {stripeStatus?.connected && (
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 right-3 flex items-center gap-2">
+                                    {preferredMethod === "stripe" && (
+                                        <span className="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                            PREFERRED
+                                        </span>
+                                    )}
                                     <CheckCircle className="h-5 w-5 text-green-400" />
                                 </div>
                             )}
@@ -379,7 +447,10 @@ export default function PaymentPage() {
                                 <h3 className="font-semibold text-white">Stripe</h3>
                             </div>
                             <p className="text-xs text-gray-400">
-                                Bank account or debit card • 3-7 days
+                                <span className="text-green-400 font-medium">Lower Fees</span> • 3-7 Business Days
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">
+                                Bank account or debit card
                             </p>
                             {stripeStatus?.connected && stripeStatus.email && (
                                 <p className="text-xs text-green-400 mt-2">{stripeStatus.email}</p>
@@ -395,7 +466,12 @@ export default function PaymentPage() {
                                 }`}
                         >
                             {paypalStatus?.connected && (
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 right-3 flex items-center gap-2">
+                                    {preferredMethod === "paypal" && (
+                                        <span className="px-2 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                            PREFERRED
+                                        </span>
+                                    )}
                                     <CheckCircle className="h-5 w-5 text-green-400" />
                                 </div>
                             )}
@@ -404,7 +480,7 @@ export default function PaymentPage() {
                                 <h3 className="font-semibold text-white">PayPal</h3>
                             </div>
                             <p className="text-xs text-gray-400">
-                                Instant to PayPal • 2% fee (max $1)
+                                <span className="text-yellow-400 font-medium">Higher Fees</span> • Quicker Transfer
                             </p>
                             {paypalStatus?.connected && paypalStatus.email && (
                                 <p className="text-xs text-purple-400 mt-2">{paypalStatus.email}</p>
@@ -483,6 +559,21 @@ export default function PaymentPage() {
                                                     <ExternalLink className="h-4 w-4" />
                                                 )}
                                                 Complete Setup
+                                            </button>
+                                        )}
+                                        {/* Set as Preferred (only show when both methods connected) */}
+                                        {paypalStatus?.connected && stripeStatus.payoutsEnabled && preferredMethod !== "stripe" && (
+                                            <button
+                                                onClick={() => savePaymentPreference("stripe")}
+                                                disabled={savingPreference}
+                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
+                                            >
+                                                {savingPreference ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <CheckCircle className="h-4 w-4" />
+                                                )}
+                                                Set as Preferred
                                             </button>
                                         )}
                                         <button
@@ -575,6 +666,21 @@ export default function PaymentPage() {
 
                                     {/* Action Buttons */}
                                     <div className="flex flex-wrap gap-3 pt-2">
+                                        {/* Set as Preferred (only show when both methods connected) */}
+                                        {stripeStatus?.connected && stripeStatus?.payoutsEnabled && preferredMethod !== "paypal" && (
+                                            <button
+                                                onClick={() => savePaymentPreference("paypal")}
+                                                disabled={savingPreference}
+                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                            >
+                                                {savingPreference ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <CheckCircle className="h-4 w-4" />
+                                                )}
+                                                Set as Preferred
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => initiateDisconnect("paypal")}
                                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
@@ -602,6 +708,16 @@ export default function PaymentPage() {
                                             placeholder="your@email.com"
                                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
                                         />
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                                        <div className="flex gap-2">
+                                            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                            <div className="text-xs text-red-400/90">
+                                                <p className="font-bold mb-1">CRITICAL WARNING</p>
+                                                <p>Please double-check your email address! If you enter an incorrect address, payments will be lost irreversibly. We are not responsible for funds sent to wrong addresses.</p>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/20">

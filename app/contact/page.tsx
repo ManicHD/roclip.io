@@ -1,46 +1,71 @@
-import Navbar from "../components/Navbar";
+"use client";
 
+import Navbar from "../components/Navbar";
 import ContactForm from "../components/ContactForm";
+import Link from "next/link";
+import { ArrowLeft, MessageSquare, Mail } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ContactPage() {
     return (
-        <main className="min-h-screen bg-black text-white selection:bg-blue-500/30">
+        <div className="min-h-screen bg-black text-white selection:bg-blue-500/30 overflow-hidden">
             <Navbar />
 
-            <section className="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center overflow-hidden">
-                {/* Background Gradients */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#6b728020_1px,transparent_1px),linear-gradient(to_bottom,#6b728020_1px,transparent_1px)] bg-[size:3rem_3rem] sm:bg-[size:4rem_4rem]" />
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-                </div>
+            {/* Background Effects */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px]" />
+            </div>
 
-                <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-                    <div className="text-center lg:text-left">
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                            Get in <span className="text-blue-500">Touch</span>
+            <main className="relative z-10 pt-32 pb-24 px-6 min-h-screen flex flex-col justify-center">
+                <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+                    {/* Left Column: Text & Info */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-8 transition-colors">
+                            <ArrowLeft className="w-4 h-4" /> Back to Home
+                        </Link>
+
+                        <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
+                            Let's <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 animate-gradient">
+                                COLLABORATE
+                            </span>
                         </h1>
-                        <p className="text-lg text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                            Have questions about clipping or partnerships? Drop us a message and we'll get back to you as soon as possible.
+
+                        <p className="text-xl text-gray-400 mb-10 leading-relaxed max-w-lg">
+                            Have questions about a campaign, payout, or partnership?
+                            Our team is ready to help you scale.
                         </p>
 
-                        <div className="flex flex-col gap-4 text-gray-400 text-sm sm:text-base items-center lg:items-start">
-                            {/* Email removed as per request */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                                    <svg suppressHydrationWarning className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                    <MessageSquare className="w-6 h-6" />
                                 </div>
-                                <span>Response time: Within 24 hours</span>
+                                <div>
+                                    <h3 className="text-white font-bold">Discord Support</h3>
+                                    <p className="text-sm text-gray-400">Join our dev server for support</p>
+                                    <Link href="https://discord.gg/q5Ew3bQnB5" target="_blank" className="text-blue-400 text-sm font-medium hover:underline mt-1 block">
+                                        Join Server &rarr;
+                                    </Link>
+                                </div>
                             </div>
                         </div>
+                    </motion.div>
+
+                    {/* Right Column: Form */}
+                    <div className="relative">
+                        {/* Form Glow */}
+                        <div className="absolute inset-0 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
+                        <ContactForm />
                     </div>
-
-                    <ContactForm />
                 </div>
-            </section>
-
-            {/* Footer removed to avoid duplication with layout */}
-        </main>
+            </main>
+        </div>
     );
 }

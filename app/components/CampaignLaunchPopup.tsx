@@ -26,16 +26,30 @@ interface Campaign {
     allowedPlatforms: string;
 }
 
-export default function CampaignLaunchPopup() {
+interface CampaignLaunchPopupProps {
+    disabled?: boolean;
+}
+
+export default function CampaignLaunchPopup({ disabled = false }: CampaignLaunchPopupProps) {
     const [notification, setNotification] = useState<CampaignNotification | null>(null);
     const [campaign, setCampaign] = useState<Campaign | null>(null);
     const [gameImage, setGameImage] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(false);
+    const [dataReady, setDataReady] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
         checkForNewCampaign();
     }, []);
+
+    // Only show popup when data is ready AND not disabled
+    useEffect(() => {
+        if (dataReady && !disabled) {
+            setTimeout(() => setIsVisible(true), 500);
+        } else if (disabled) {
+            setIsVisible(false);
+        }
+    }, [dataReady, disabled]);
 
     const checkForNewCampaign = async () => {
         try {
@@ -72,8 +86,8 @@ export default function CampaignLaunchPopup() {
                         }
                     }
 
-                    // Show popup with animation
-                    setTimeout(() => setIsVisible(true), 500);
+                    // Mark data as ready - visibility controlled by useEffect based on disabled prop
+                    setDataReady(true);
                 }
             }
         } catch (error) {

@@ -12,9 +12,18 @@ import {
     DollarSign,
     Eye,
     Filter,
+    ChevronDown,
+    Megaphone,
 } from "lucide-react";
+import TotpModal from "@/app/components/TotpModal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+interface CampaignEarning {
+    campaignId: number;
+    campaignName: string;
+    pendingEarnings: number;
+}
 
 interface User {
     discordId: string;
@@ -26,20 +35,36 @@ interface User {
     totalPaid: number;
     eligible: boolean;
     stripeConnected: boolean;
+    paypalConnected?: boolean;
+    earningsByCampaign?: CampaignEarning[];
 }
 
-type FilterType = "all" | "eligible" | "not-eligible" | "stripe-ready";
+interface CampaignWithPending {
+    id: number;
+    name: string;
+    pendingTotal: number;
+}
+
+type FilterType = "all" | "eligible" | "not-eligible" | "payment-ready";
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<User[]>([]);
+    const [eligibleUsers, setEligibleUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<FilterType>("all");
+    const [campaignFilter, setCampaignFilter] = useState<number | null>(null);
+    const [campaignsWithPending, setCampaignsWithPending] = useState<CampaignWithPending[]>([]);
+    const [showCampaignDropdown, setShowCampaignDropdown] = useState(false);
+    const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [minimumPayout, setMinimumPayout] = useState(100);
+    const [totalPending, setTotalPending] = useState(0);
     const [bulkPayoutLoading, setBulkPayoutLoading] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [showResultsDialog, setShowResultsDialog] = useState(false);
+    const [showTotpModal, setShowTotpModal] = useState(false);
+    const [totpError, setTotpError] = useState<string | null>(null);
     const [confirmCountdown, setConfirmCountdown] = useState(5);
     const [payoutResults, setPayoutResults] = useState<{
         processed: number;
@@ -51,15 +76,23 @@ export default function AdminUsersPage() {
 
 
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/admin/users`, {
-                    credentials: "include",
-                });
-                if (!res.ok) throw new Error("Failed to fetch users");
-                const data = await res.json();
-                setUsers(data.users || []);
-                setMinimumPayout(data.minimumPayout || 100);
+                const [usersRes, eligibleRes] = await Promise.all([
+                    fetch(`${API_URL}/api/admin/users`, { credentials: "include" }),
+                    fetch(`${API_URL}/api/admin/payouts/eligible`, { credentials: "include" }),
+                ]);
+                if (!usersRes.ok) throw new Error("Failed to fetch users");
+                const usersData = await usersRes.json();
+                setUsers(usersData.users || []);
+                setMinimumPayout(usersData.minimumPayout || 100);
+
+                if (eligibleRes.ok) {
+                    const eligibleData = await eligibleRes.json();
+                    setEligibleUsers(eligibleData.eligibleUsers || []);
+                    setCampaignsWithPending(eligibleData.campaignsWithPending || []);
+                    setTotalPending(eligibleData.totalPending || 0);
+                }
             } catch (err) {
                 console.error("Error fetching users:", err);
                 setError("Failed to load users");
@@ -68,7 +101,7 @@ export default function AdminUsersPage() {
             }
         };
 
-        fetchUsers();
+        fetchData();
     }, []);
 
     // Handle countdown timer for bulk payout confirmation
@@ -106,17 +139,45 @@ export default function AdminUsersPage() {
             }
         }
 
+        // Campaign filter - check if user has ANY earnings from this campaign
+        let campaignPending = 0;
+        if (campaignFilter !== null) {
+            // Find this user in eligibleUsers to get their campaign breakdown
+            const eligibleUser = eligibleUsers.find(eu => eu.discordId === user.discordId);
+            if (!eligibleUser?.earningsByCampaign) return false;
+            const campaignEarning = eligibleUser.earningsByCampaign.find(
+                camp => camp.campaignId === campaignFilter
+            );
+            // Show users with any earnings from this campaign (including 0 pending)
+            if (!campaignEarning) return false;
+            campaignPending = campaignEarning.pendingEarnings;
+        }
+
+        // Determine eligibility based on context
+        const isEligible = campaignFilter !== null
+            ? campaignPending >= minimumPayout
+            : user.eligible;
+
+        // Check if user has any payment method ready
+        const hasPaymentMethod = !!(user.stripeConnected || user.paypalConnected);
+
         // Status filter
+        let passesStatusFilter = true;
         switch (filter) {
             case "eligible":
-                return user.eligible;
+                passesStatusFilter = isEligible;
+                break;
             case "not-eligible":
-                return !user.eligible;
-            case "stripe-ready":
-                return user.eligible && user.stripeConnected;
-            default:
-                return true;
+                passesStatusFilter = !isEligible;
+                break;
+            case "payment-ready":
+                // Now checks for any payment method (Stripe OR PayPal)
+                passesStatusFilter = isEligible && hasPaymentMethod;
+                break;
         }
+        if (!passesStatusFilter) return false;
+
+        return true;
     });
 
     if (loading) {
@@ -138,14 +199,53 @@ export default function AdminUsersPage() {
         );
     }
 
-    const eligibleCount = users.filter((u) => u.eligible).length;
-    const stripeReadyCount = users.filter((u) => u.eligible && u.stripeConnected).length;
-    const totalPending = users.reduce((sum, u) => sum + u.pendingBalance, 0);
+    // Helper to get pending amount - either campaign-specific or total
+    const getUserPendingAmount = (user: User): number => {
+        if (campaignFilter !== null) {
+            // Find this user in eligibleUsers to get their campaign breakdown
+            const eligibleUser = eligibleUsers.find(eu => eu.discordId === user.discordId);
+            if (eligibleUser?.earningsByCampaign) {
+                const campaignEarning = eligibleUser.earningsByCampaign.find(
+                    camp => camp.campaignId === campaignFilter
+                );
+                return campaignEarning?.pendingEarnings || 0;
+            }
+            return 0;
+        }
+        return user.pendingBalance;
+    };
 
-    const handleBulkPayout = async () => {
-        setBulkPayoutLoading(true);
+    // Helper to check eligibility - campaign-specific when filtering
+    const isUserEligible = (user: User): boolean => {
+        const pendingAmount = getUserPendingAmount(user);
+        return pendingAmount >= minimumPayout;
+    };
+
+    // Get the selected campaign name for display
+    const selectedCampaignName = campaignFilter !== null
+        ? campaignsWithPending.find(c => c.id === campaignFilter)?.name
+        : null;
+
+    // Calculate counts based on current filter context
+    const eligibleCount = campaignFilter !== null
+        ? filteredUsers.filter((u) => isUserEligible(u)).length
+        : users.filter((u) => u.eligible).length;
+    const paymentReadyCount = campaignFilter !== null
+        ? filteredUsers.filter((u) => isUserEligible(u) && (u.stripeConnected || u.paypalConnected)).length
+        : users.filter((u) => u.eligible && (u.stripeConnected || u.paypalConnected)).length;
+    const totalPendingCalc = users.reduce((sum, u) => sum + u.pendingBalance, 0);
+
+    // Open TOTP modal after confirmation countdown
+    const handleConfirmPayout = () => {
         setShowConfirmDialog(false);
-        setError(null);
+        setTotpError(null);
+        setShowTotpModal(true);
+    };
+
+    // Actually process payout after TOTP verification
+    const handleBulkPayout = async (totpCode: string) => {
+        setBulkPayoutLoading(true);
+        setTotpError(null);
         try {
             const res = await fetch(`${API_URL}/api/admin/payouts/process-bulk`, {
                 method: "POST",
@@ -155,6 +255,8 @@ export default function AdminUsersPage() {
                     filter,
                     search,
                     minimumPayout,
+                    campaignFilter,
+                    totpCode, // Include TOTP verification code
                 }),
             });
 
@@ -166,10 +268,17 @@ export default function AdminUsersPage() {
 
             const data = await res.json();
 
+            // Handle TOTP-specific errors
             if (!res.ok) {
+                if (data.code === "TOTP_INVALID" || data.code === "TOTP_REQUIRED" || data.code === "TOTP_INVALID_FORMAT") {
+                    setTotpError(data.error || "Invalid verification code");
+                    return; // Keep TOTP modal open
+                }
                 throw new Error(data.error || "Failed to process bulk payouts");
             }
 
+            // Success - close modal and show results
+            setShowTotpModal(false);
             setPayoutResults(data);
             setShowResultsDialog(true);
 
@@ -184,6 +293,7 @@ export default function AdminUsersPage() {
             }
         } catch (err: any) {
             console.error("Bulk payout error:", err);
+            setShowTotpModal(false);
             setError(err.message || "Failed to process bulk payouts");
         } finally {
             setBulkPayoutLoading(false);
@@ -231,7 +341,7 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl border border-white/10 bg-white/5">
                     <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
                         <Users className="h-4 w-4" /> Total Users
@@ -246,9 +356,17 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5">
                     <div className="flex items-center gap-2 text-blue-400 text-sm mb-1">
-                        <CheckCircle className="h-4 w-4" /> Stripe Ready
+                        <CheckCircle className="h-4 w-4" /> Payment Ready
                     </div>
-                    <p className="text-2xl font-bold text-blue-400">{stripeReadyCount}</p>
+                    <p className="text-2xl font-bold text-blue-400">{paymentReadyCount}</p>
+                </div>
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-green-500/10">
+                    <div className="flex items-center gap-2 text-emerald-300 text-sm mb-1">
+                        <DollarSign className="h-4 w-4" /> Total Ready for Payout
+                    </div>
+                    <p className="text-2xl font-bold text-emerald-400">
+                        ${totalPending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
                 </div>
             </div>
 
@@ -266,29 +384,109 @@ export default function AdminUsersPage() {
                     />
                 </div>
 
-                {/* Filter Buttons */}
-                <div className="flex gap-2">
-                    {[
-                        { value: "all" as FilterType, label: "All" },
-                        { value: "eligible" as FilterType, label: "Eligible" },
-                        { value: "stripe-ready" as FilterType, label: "Stripe Ready" },
-                        { value: "not-eligible" as FilterType, label: "< $" + minimumPayout },
-                    ].map((f) => (
+                {/* Status Filter Dropdown */}
+                <div className="relative">
+                    <button
+                        onClick={() => {
+                            setShowStatusDropdown(!showStatusDropdown);
+                            setShowCampaignDropdown(false);
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter !== "all"
+                            ? "bg-blue-500 text-white"
+                            : "bg-white/5 text-gray-400 hover:bg-white/10"
+                            }`}
+                    >
+                        <Filter className="h-4 w-4" />
+                        {filter === "all" ? "All Users" :
+                            filter === "eligible" ? "Eligible" :
+                                filter === "payment-ready" ? "Payment Ready" :
+                                    `< $${minimumPayout}`}
+                        <ChevronDown className={`h-4 w-4 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {showStatusDropdown && (
+                        <div className="absolute top-full left-0 mt-2 z-20 w-52 rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-xl shadow-xl">
+                            {[
+                                { value: "all" as FilterType, label: "All Users" },
+                                { value: "eligible" as FilterType, label: "Eligible (≥ $" + minimumPayout + ")" },
+                                { value: "not-eligible" as FilterType, label: "Not Eligible (< $" + minimumPayout + ")" },
+                                { value: "payment-ready" as FilterType, label: "Payment Ready" },
+                            ].map((f, i) => (
+                                <button
+                                    key={f.value}
+                                    onClick={() => {
+                                        setFilter(f.value);
+                                        setShowStatusDropdown(false);
+                                    }}
+                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center justify-between ${i > 0 ? "border-t border-white/5" : ""
+                                        } ${filter === f.value ? "text-blue-400 bg-blue-500/10" : "text-white"}`}
+                                >
+                                    {f.label}
+                                    {filter === f.value && <CheckCircle className="h-4 w-4" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Campaign Filter Dropdown */}
+                {campaignsWithPending.length > 0 ? (
+                    <div className="relative">
                         <button
-                            key={f.value}
-                            onClick={() => setFilter(f.value)}
-                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === f.value
-                                ? "bg-blue-500 text-white"
+                            onClick={() => {
+                                setShowCampaignDropdown(!showCampaignDropdown);
+                                setShowStatusDropdown(false);
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${campaignFilter !== null
+                                ? "bg-purple-500 text-white"
                                 : "bg-white/5 text-gray-400 hover:bg-white/10"
                                 }`}
                         >
-                            {f.label}
+                            <Megaphone className="h-4 w-4" />
+                            {campaignFilter !== null
+                                ? campaignsWithPending.find(c => c.id === campaignFilter)?.name || "Campaign"
+                                : "Filter by Campaign"}
+                            <ChevronDown className={`h-4 w-4 transition-transform ${showCampaignDropdown ? "rotate-180" : ""}`} />
                         </button>
-                    ))}
-                </div>
+
+                        {showCampaignDropdown && (
+                            <div className="absolute top-full left-0 mt-2 z-20 w-72 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-xl shadow-xl">
+                                <button
+                                    onClick={() => {
+                                        setCampaignFilter(null);
+                                        setShowCampaignDropdown(false);
+                                    }}
+                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center justify-between ${campaignFilter === null ? "text-purple-400 bg-purple-500/10" : "text-white"
+                                        }`}
+                                >
+                                    All Campaigns
+                                    {campaignFilter === null && <CheckCircle className="h-4 w-4" />}
+                                </button>
+                                {campaignsWithPending.map((campaign) => (
+                                    <button
+                                        key={campaign.id}
+                                        onClick={() => {
+                                            setCampaignFilter(campaign.id);
+                                            setShowCampaignDropdown(false);
+                                        }}
+                                        className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors border-t border-white/5 ${campaignFilter === campaign.id ? "text-purple-400 bg-purple-500/10" : "text-white"
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span className="truncate">{campaign.name}</span>
+                                            <span className="text-green-400 text-xs font-medium ml-2">
+                                                ${campaign.pendingTotal.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : null}
 
                 {/* Bulk Payout Button */}
-                {filteredUsers.filter((u) => u.eligible && u.stripeConnected).length > 0 && (
+                {filteredUsers.filter((u) => isUserEligible(u) && (u.stripeConnected || u.paypalConnected)).length > 0 && (
                     <button
                         onClick={() => setShowConfirmDialog(true)}
                         disabled={bulkPayoutLoading}
@@ -349,31 +547,55 @@ export default function AdminUsersPage() {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm text-gray-400">Pending</p>
+                                            <p className="text-sm text-gray-400">
+                                                {campaignFilter !== null ? (
+                                                    <span className="text-purple-400" title={selectedCampaignName || undefined}>
+                                                        Campaign $
+                                                    </span>
+                                                ) : (
+                                                    "Pending"
+                                                )}
+                                            </p>
                                             <p
-                                                className={`font-semibold ${user.eligible ? "text-green-400" : "text-white"
+                                                className={`font-semibold ${campaignFilter !== null
+                                                    ? "text-purple-400"
+                                                    : user.eligible
+                                                        ? "text-green-400"
+                                                        : "text-white"
                                                     }`}
                                             >
-                                                ${user.pendingBalance.toFixed(2)}
+                                                ${getUserPendingAmount(user).toFixed(2)}
                                             </p>
                                         </div>
 
                                         {/* Status Indicators */}
                                         <div className="flex items-center gap-2">
-                                            {user.eligible ? (
-                                                <span className="px-2 py-1 rounded-lg text-xs bg-green-500/10 text-green-400 border border-green-500/20">
+                                            {isUserEligible(user) ? (
+                                                <span className={`px-2 py-1 rounded-lg text-xs border ${campaignFilter !== null
+                                                    ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                                                    : "bg-green-500/10 text-green-400 border-green-500/20"
+                                                    }`}>
                                                     Eligible
                                                 </span>
                                             ) : (
                                                 <span className="px-2 py-1 rounded-lg text-xs bg-gray-500/10 text-gray-400 border border-gray-500/20">
-                                                    ${(minimumPayout - user.pendingBalance).toFixed(0)} needed
+                                                    ${(minimumPayout - getUserPendingAmount(user)).toFixed(0)} needed
                                                 </span>
                                             )}
-                                            {user.stripeConnected ? (
-                                                <CheckCircle className="h-5 w-5 text-green-400" />
-                                            ) : (
-                                                <AlertCircle className="h-5 w-5 text-yellow-400" />
-                                            )}
+                                            {/* Stripe Status */}
+                                            <span className={`text-xs px-1.5 py-0.5 rounded ${user.stripeConnected
+                                                ? 'bg-blue-500/20 text-blue-400'
+                                                : 'bg-gray-500/10 text-gray-500'
+                                                }`} title={user.stripeConnected ? 'Stripe Connected' : 'No Stripe'}>
+                                                S
+                                            </span>
+                                            {/* PayPal Status */}
+                                            <span className={`text-xs px-1.5 py-0.5 rounded ${user.paypalConnected
+                                                ? 'bg-purple-500/20 text-purple-400'
+                                                : 'bg-gray-500/10 text-gray-500'
+                                                }`} title={user.paypalConnected ? 'PayPal Connected' : 'No PayPal'}>
+                                                P
+                                            </span>
                                         </div>
 
                                         <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-white transition-colors" />
@@ -395,46 +617,57 @@ export default function AdminUsersPage() {
                     >
                         <h3 className="text-xl font-bold text-white mb-4">
                             Confirm Bulk Payout
+                            {campaignFilter !== null && (
+                                <span className="text-purple-400 text-sm font-normal ml-2">
+                                    (Campaign: {selectedCampaignName})
+                                </span>
+                            )}
                         </h3>
                         <div className="space-y-3 mb-6">
                             <p className="text-gray-300">
                                 You are about to process payouts for{" "}
                                 <span className="font-semibold text-green-400">
-                                    {filteredUsers.filter((u) => u.eligible && u.stripeConnected).length}
+                                    {filteredUsers.filter((u) => isUserEligible(u) && (u.stripeConnected || u.paypalConnected)).length}
                                 </span>{" "}
-                                eligible users with Stripe ready.
+                                eligible users with payment methods ready.
                             </p>
                             <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
                                 <p className="text-sm text-blue-300 font-medium mb-2">
                                     Current Filters:
                                 </p>
                                 <div className="text-xs text-gray-400 space-y-1">
-                                    <div>Status: <span className="text-white">{filter === "all" ? "All" : filter === "eligible" ? "Eligible" : filter === "stripe-ready" ? "Stripe Ready" : `< $${minimumPayout}`}</span></div>
+                                    <div>Status: <span className="text-white">{filter === "all" ? "All" : filter === "eligible" ? "Eligible" : filter === "payment-ready" ? "Payment Ready" : `< $${minimumPayout}`}</span></div>
                                     {search && <div>Search: <span className="text-white">"{search}"</span></div>}
+                                    {campaignFilter !== null && (
+                                        <div>Campaign: <span className="text-purple-400 font-medium">{selectedCampaignName}</span></div>
+                                    )}
                                 </div>
                             </div>
                             <p className="text-sm text-gray-400">
                                 Total amount:{" "}
-                                <span className="font-semibold text-white">
+                                <span className={`font-semibold ${campaignFilter !== null ? "text-purple-400" : "text-white"}`}>
                                     ${filteredUsers
-                                        .filter((u) => u.eligible && u.stripeConnected)
-                                        .reduce((sum, u) => sum + u.pendingBalance, 0)
+                                        .filter((u) => isUserEligible(u) && u.stripeConnected)
+                                        .reduce((sum, u) => sum + getUserPendingAmount(u), 0)
                                         .toFixed(2)}
                                 </span>
+                                {campaignFilter !== null && (
+                                    <span className="text-xs text-gray-500 ml-1">(campaign only)</span>
+                                )}
                             </p>
                             <div className="max-h-32 overflow-y-auto p-2 rounded bg-white/5 border border-white/10">
                                 <p className="text-xs text-gray-500 mb-1">Users to be paid:</p>
                                 {filteredUsers
-                                    .filter((u) => u.eligible && u.stripeConnected)
+                                    .filter((u) => isUserEligible(u) && u.stripeConnected)
                                     .slice(0, 10)
                                     .map((u) => (
                                         <p key={u.discordId} className="text-xs text-gray-300">
-                                            {u.username} - ${u.pendingBalance.toFixed(2)}
+                                            {u.username} - <span className={campaignFilter !== null ? "text-purple-400" : ""}>${getUserPendingAmount(u).toFixed(2)}</span>
                                         </p>
                                     ))}
-                                {filteredUsers.filter((u) => u.eligible && u.stripeConnected).length > 10 && (
+                                {filteredUsers.filter((u) => isUserEligible(u) && u.stripeConnected).length > 10 && (
                                     <p className="text-xs text-gray-500 mt-1">
-                                        and {filteredUsers.filter((u) => u.eligible && u.stripeConnected).length - 10} more...
+                                        and {filteredUsers.filter((u) => isUserEligible(u) && u.stripeConnected).length - 10} more...
                                     </p>
                                 )}
                             </div>
@@ -447,14 +680,14 @@ export default function AdminUsersPage() {
                                 Cancel
                             </button>
                             <button
-                                onClick={handleBulkPayout}
+                                onClick={handleConfirmPayout}
                                 disabled={confirmCountdown > 0}
                                 className={`flex-1 px-4 py-2.5 rounded-xl font-semibold transition-all shadow-lg ${confirmCountdown > 0
-                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 shadow-green-500/20'
+                                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-green-600 to-green-500 text-white hover:from-green-500 hover:to-green-400 shadow-green-500/20'
                                     }`}
                             >
-                                {confirmCountdown > 0 ? `Wait ${confirmCountdown}s...` : 'Confirm Payout'}
+                                {confirmCountdown > 0 ? `Wait ${confirmCountdown}s...` : 'Continue to Verify'}
                             </button>
                         </div>
                     </motion.div>
@@ -546,6 +779,20 @@ export default function AdminUsersPage() {
                     </motion.div>
                 </div>
             )}
+
+            {/* TOTP Verification Modal */}
+            <TotpModal
+                isOpen={showTotpModal}
+                onClose={() => {
+                    setShowTotpModal(false);
+                    setTotpError(null);
+                }}
+                onVerify={handleBulkPayout}
+                loading={bulkPayoutLoading}
+                error={totpError}
+                title="Payout Security Verification"
+                message="Enter your 6-digit code from Google Authenticator to authorize this payout."
+            />
         </div>
     );
 }

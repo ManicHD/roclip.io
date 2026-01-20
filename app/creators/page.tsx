@@ -2,121 +2,172 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search, Video, DollarSign, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Play, DollarSign, Wallet, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
-const steps = [
+const features = [
     {
-        icon: Search,
-        title: "Browse Campaigns",
-        description: "Find games you want to promote",
-        color: "from-blue-500 to-cyan-500",
-    },
-    {
-        icon: Video,
-        title: "Record & Upload",
-        description: "Create engaging content",
-        color: "from-purple-500 to-pink-500",
-    },
-    {
+        title: "Monetize Your Clips",
+        desc: "Turn your views into real cash. We pay per 1,000 views on approved submissions.",
         icon: DollarSign,
-        title: "Get Paid",
-        description: "Earn per 1,000 views",
-        color: "from-green-500 to-emerald-500",
+        color: "text-green-400",
+        bg: "bg-green-500/10"
     },
+    {
+        title: "Instant Payouts",
+        desc: "Cash out via PayPal or Stripe. Fast, reliable, and secure.",
+        icon: Wallet,
+        color: "text-blue-400",
+        bg: "bg-blue-500/10"
+    },
+    {
+        title: "Viral Opportunities",
+        desc: "Work with top games that give you the best chance of going viral.",
+        icon: TrendingUp,
+        color: "text-purple-400",
+        bg: "bg-purple-500/10"
+    }
 ];
 
 export default function CreatorsPage() {
     return (
-        <>
+        <div className="min-h-screen bg-black text-white overflow-hidden selection:bg-green-500/30">
             <Navbar />
-            <main className="min-h-screen bg-black text-white pt-24 pb-20 px-6">
-                <div className="max-w-4xl mx-auto">
-                    {/* Back Link */}
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        <span>Back to Home</span>
-                    </Link>
 
-                    {/* Hero Section */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-16"
-                    >
-                        <span className="inline-block px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium mb-6">
-                            For Content Creators
-                        </span>
-                        <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                            Earn Money Making <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">Roblox Videos</span>
-                        </h1>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                            Join thousands of creators earning money by making short-form Roblox content.
-                        </p>
-                    </motion.div>
+            {/* Background Effects */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-10%] right-[-5%] w-[700px] h-[700px] bg-green-600/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]" />
+            </div>
 
-                    {/* Simple Diagram */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="mb-16"
-                    >
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
-                            {steps.map((step, index) => (
-                                <div key={index} className="flex items-center">
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.2 + index * 0.15 }}
-                                        className="flex flex-col items-center text-center"
-                                    >
-                                        <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-4 shadow-lg`}>
-                                            <step.icon className="h-10 w-10 text-white" />
-                                        </div>
-                                        <h3 className="text-lg font-semibold text-white mb-1">{step.title}</h3>
-                                        <p className="text-sm text-gray-400">{step.description}</p>
-                                    </motion.div>
+            <main className="relative z-10 min-h-screen flex items-center justify-center pt-32 pb-24 px-6">
+                <div className="max-w-7xl mx-auto w-full">
+                    {/* Header */}
+                    <div className="text-center mb-32 relative">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-8 transition-colors">
+                                <ArrowLeft className="w-4 h-4" /> Back to Home
+                            </Link>
 
-                                    {index < steps.length - 1 && (
-                                        <ArrowRight className="h-8 w-8 text-gray-600 mx-6 hidden md:block" />
-                                    )}
+                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 tracking-tight">
+                                Get Paid to <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 animate-gradient">
+                                    CLIP ROBLOX
+                                </span>
+                            </h1>
+
+                            <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed mb-12">
+                                The easiest way for creators to earn money. Pick a game, record a clip, post it, and get paid.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link
+                                    href="https://discord.gg/SGf2ADYjb8"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-8 py-4 rounded-xl bg-green-600 text-white font-bold text-lg hover:bg-green-500 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-green-500/25 flex items-center justify-center gap-2"
+                                >
+                                    <Play className="w-5 h-5 fill-current" /> Start Creating
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Feature Cards with Glassmorphism */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-32">
+                        {features.map((item, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.1 }}
+                                className="group p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm relative overflow-hidden hover:bg-white/[0.08] transition-colors"
+                            >
+                                <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                                    <item.icon className={`w-7 h-7 ${item.color}`} />
                                 </div>
-                            ))}
-                        </div>
-                    </motion.div>
+                                <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
+                                <p className="text-gray-400 leading-relaxed text-lg">{item.desc}</p>
+                            </motion.div>
+                        ))}
+                    </div>
 
-                    {/* How to Join */}
+                    {/* Interactive "How it works" equivalent */}
+                    <div className="mb-32">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            className="relative rounded-[2.5rem] bg-gradient-to-br from-gray-900 to-black border border-white/10 overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+                            <div className="grid md:grid-cols-2 gap-12 p-8 md:p-16 items-center">
+                                <div>
+                                    <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                                        Focus on content. <br />
+                                        <span className="text-gray-500">We handle the rest.</span>
+                                    </h2>
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
+                                                <ShieldCheck className="w-5 h-5" />
+                                            </div>
+                                            <p className="text-lg text-gray-300">Safe, verified campaigns only</p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
+                                                <Zap className="w-5 h-5" />
+                                            </div>
+                                            <p className="text-lg text-gray-300">Fast review times for submissions</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-10">
+                                        <Link href="https://discord.gg/SGf2ADYjb8" target="_blank" className="text-green-400 font-bold hover:text-green-300 flex items-center gap-2 group">
+                                            Join the Community <Play className="w-4 h-4 fill-current group-hover:translate-x-1 transition-transform" />
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {/* Visual graphic element */}
+                                <div className="relative aspect-square rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                                    <div className="absolute inset-0 bg-green-500/10 animate-pulse" />
+                                    <div className="text-center p-8 relative z-10">
+                                        <div className="text-6xl font-black text-white mb-2">$500+</div>
+                                        <div className="text-gray-400">Average Top Creator Earnings / Week</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* CTA */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-center p-8 md:p-12 rounded-3xl border border-white/10 bg-gradient-to-br from-green-500/10 to-blue-500/10"
+                        whileInView={{ opacity: 1, y: 0 }}
+                        className="text-center"
                     >
-                        <h2 className="text-3xl font-bold mb-4">Ready to Start Earning?</h2>
-                        <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-                            Join our Discord server to apply and start participating in campaigns. It only takes a few minutes to get started.
-                        </p>
+                        <h2 className="text-4xl md:text-6xl font-black mb-8">
+                            Start Earning Today
+                        </h2>
                         <Link
                             href="https://discord.gg/SGf2ADYjb8"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 text-white font-semibold text-lg shadow-lg shadow-green-500/25 hover:from-green-500 hover:to-emerald-600 hover:shadow-xl transition-all"
+                            className="inline-flex px-12 py-6 rounded-2xl bg-white text-black font-bold text-xl hover:scale-105 transition-transform shadow-2xl shadow-white/10"
                         >
-                            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-                            </svg>
-                            Join Discord to Apply
+                            Join Discord
                         </Link>
-                        <p className="text-sm text-gray-500 mt-4">
-                            Free to join • No minimum followers required
-                        </p>
                     </motion.div>
+
                 </div>
             </main>
-        </>
+        </div>
     );
 }

@@ -1,86 +1,98 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Megaphone, Video, Send, Banknote, ArrowRight } from "lucide-react";
+import { Megaphone, Video, Banknote, ArrowRight, CheckCircle2 } from "lucide-react";
 
 const steps = [
     {
         step: "01",
-        title: "Choose a Campaign",
-        description: "Browse active campaigns and pick games you want to promote.",
+        title: "Start a Campaign",
+        description: "Choose your budget and RPM. Your campaign instantly goes live to our network of creators.",
         icon: Megaphone,
+        color: "blue",
     },
     {
         step: "02",
-        title: "Create & Upload",
-        description: "Make your short-form video, follow the rules, and post it publicly.",
+        title: "Creators Get to Work",
+        description: "Creators make authentic, high-quality clips promoting your game on TikTok and YouTube Shorts.",
         icon: Video,
+        color: "purple",
     },
     {
         step: "03",
-        title: "Earn From Views",
-        description: "For every 1,000 approved views, you get paid. It's that simple.",
+        title: "Pay for Results",
+        description: "You only pay for verifiable views. Watch your concurrents soar as the views roll in.",
         icon: Banknote,
+        color: "green",
     },
 ];
 
 export default function HowItWorks() {
     return (
-        <section id="how-it-works" className="py-24 bg-black relative overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="how-it-works" className="py-32 bg-black relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-blue-950/5 to-black pointer-events-none" />
+
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <motion.div
-                    className="text-center mb-20"
+                    className="flex flex-col md:flex-row items-start md:items-end justify-between mb-24 gap-8"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
-                        How It Works
-                    </h2>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                        Start earning in 3 simple steps.
-                    </p>
+                    <div>
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+                            How It Works
+                        </h2>
+                        <p className="text-xl text-gray-400 max-w-xl leading-relaxed">
+                            A simple, transparent process designed for speed and scale.
+                        </p>
+                    </div>
                 </motion.div>
 
                 <div className="relative">
-                    {/* Connection Line (Desktop) */}
-                    <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-blue-900/20 via-blue-500/20 to-violet-900/20 -translate-y-1/2 z-0" />
+                    {/* Desktop Connecting Line */}
+                    <div className="hidden md:block absolute top-[2.5rem] left-0 right-0 h-px bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-blue-500/0" />
+                    <motion.div
+                        className="hidden md:block absolute top-[2.5rem] left-0 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent w-1/3 blur-sm"
+                        animate={{
+                            x: ["-100%", "300%"],
+                        }}
+                        transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "linear",
+                        }}
+                    />
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
                         {steps.map((item, index) => (
                             <motion.div
                                 key={index}
-                                className="group relative"
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
+                                transition={{ duration: 0.5, delay: index * 0.2 }}
+                                className="relative group"
                             >
-                                {/* Desktop Arrow */}
-                                {index < steps.length - 1 && (
-                                    <div className="hidden md:block absolute top-1/2 -right-4 -translate-y-1/2 transform text-blue-500/20 z-0">
-                                        <ArrowRight suppressHydrationWarning className="w-6 h-6" />
+                                {/* Step Indicator */}
+                                <div className="flex items-center gap-4 mb-8 relative">
+                                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-${item.color}-500/10 to-${item.color}-500/5 border border-${item.color}-500/20 flex items-center justify-center relative z-10 group-hover:scale-110 transition-transform duration-300 backdrop-blur-md`}>
+                                        <item.icon className="w-8 h-8 text-white" />
+                                        <div className={`absolute inset-0 bg-${item.color}-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                                     </div>
-                                )}
-
-                                <div className="relative flex flex-col items-center text-center p-6 h-full rounded-2xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:bg-white/10">
-                                    <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 border border-blue-500/20">
-                                        <item.icon suppressHydrationWarning className="w-6 h-6 text-blue-400" />
-                                    </div>
-
-                                    <span className="text-xs font-bold text-blue-600 mb-2 px-2 py-1 rounded-full bg-blue-950/30 border border-blue-900/50">
-                                        STEP {item.step}
+                                    <span className="text-8xl font-black text-white/5 absolute -top-4 -right-4 select-none pointer-events-none">
+                                        {item.step}
                                     </span>
-
-                                    <h3 className="text-lg font-semibold text-white mb-2">
-                                        {item.title}
-                                    </h3>
-
-                                    <p className="text-sm text-gray-400 leading-relaxed">
-                                        {item.description}
-                                    </p>
                                 </div>
+
+                                <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors duration-300">
+                                    {item.title}
+                                </h3>
+
+                                <p className="text-gray-400 leading-relaxed text-lg border-l-2 border-white/5 pl-4 group-hover:border-blue-500/50 transition-colors duration-300">
+                                    {item.description}
+                                </p>
                             </motion.div>
                         ))}
                     </div>

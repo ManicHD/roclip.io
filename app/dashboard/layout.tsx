@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import NotificationCenter from "../components/NotificationCenter";
 import CampaignLaunchPopup from "../components/CampaignLaunchPopup";
+import EmailSetupPopup from "../components/EmailSetupPopup";
 
 interface User {
     discordId: string;
@@ -181,6 +182,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [emailPopupActive, setEmailPopupActive] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -245,9 +247,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <main className="lg:pl-64">
                     <div className="p-4 lg:p-8">{children}</div>
                 </main>
-                {/* Campaign Launch Popup */}
-                <CampaignLaunchPopup />
+                {/* Email Setup Popup - Priority over campaign popup */}
+                <EmailSetupPopup onActiveChange={setEmailPopupActive} />
+                {/* Campaign Launch Popup - Disabled when email popup is active */}
+                <CampaignLaunchPopup disabled={emailPopupActive} />
             </div>
         </AuthContext.Provider>
     );
 }
+

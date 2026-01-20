@@ -35,10 +35,10 @@ export default function ConnectSocialsModal({
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-gray-900/95 backdrop-blur-xl shadow-2xl"
+                            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl shadow-2xl"
                         >
                             {/* Header */}
-                            <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-white/10 bg-gray-900/95 backdrop-blur-xl">
+                            <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-white/10 bg-black/95 backdrop-blur-xl">
                                 <div className="flex items-center gap-3">
                                     <div className="rounded-xl bg-blue-500/10 p-2.5">
                                         <Link2 className="h-5 w-5 text-blue-400" />

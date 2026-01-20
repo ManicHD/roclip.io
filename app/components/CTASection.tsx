@@ -11,13 +11,15 @@ export default function CTASection() {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#6b728010_1px,transparent_1px),linear-gradient(to_bottom,#6b728010_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
             <div className="max-w-4xl mx-auto px-6 relative z-10">
+                <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none" />
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="text-center p-12 rounded-3xl border border-white/10 bg-gradient-to-br from-blue-950/30 to-purple-950/20 backdrop-blur-sm"
+                    className="relative text-center p-12 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md overflow-hidden"
                 >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/5 pointer-events-none" />
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                         Ready to Grow Your Game?
                     </h2>

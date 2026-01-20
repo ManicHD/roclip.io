@@ -14,6 +14,8 @@ import {
     Eye,
     Clock,
     Gamepad2,
+    ArrowRight,
+    Zap,
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -37,6 +39,28 @@ const InstagramIcon = () => (
     </svg>
 );
 
+// Helper function to get relative time
+const getRelativeTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffDays / 365);
+
+    if (diffYears > 0) return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
+    if (diffMonths > 0) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+    if (diffWeeks > 0) return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;
+    if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+};
+
 // Format payout to always show 2 decimal places
 function formatPayout(payout: string | null | undefined): string {
     if (!payout || payout === "null") return "N/A";
@@ -44,7 +68,7 @@ function formatPayout(payout: string | null | undefined): string {
     const match = payout.match(/[\d.]+/);
     if (!match) return payout;
     const num = parseFloat(match[0]);
-    return `$${num.toFixed(2)} per 1k`;
+    return `$${num.toFixed(2)}/1k`;
 }
 
 // Get platform icon component
@@ -106,6 +130,30 @@ function CampaignModal({ campaign, onClose }: { campaign: Campaign; onClose: () 
     // Trust backend's canSubmit calculation which checks budget, acceptingSubmissions, and active status
     const isFull = campaign.canSubmit === false;
 
+    const [thumbnail, setThumbnail] = useState<string | null>(campaign.thumbnail || null);
+
+    useEffect(() => {
+        // If already have thumbnail, don't fetch
+        if (campaign.thumbnail) return;
+
+        // Try to extract universe ID from URL for Roblox games
+        const match = campaign.game.match(/games\/(\d+)/);
+        if (!match) return;
+
+        const placeId = match[1];
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+        // Fetch thumbnail via our backend proxy
+        fetch(`${API_URL}/api/roblox/thumbnail/${placeId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.imageUrl) {
+                    setThumbnail(data.imageUrl);
+                }
+            })
+            .catch(err => console.error('Failed to fetch game thumbnail:', err));
+    }, [campaign.game, campaign.thumbnail]);
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -124,8 +172,21 @@ function CampaignModal({ campaign, onClose }: { campaign: Campaign; onClose: () 
                 {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b border-white/10">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                            <Gamepad2 className="h-8 w-8 text-gray-400" />
+                        <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                            {thumbnail ? (
+                                <img
+                                    src={thumbnail}
+                                    alt={campaign.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <Gamepad2 className="h-8 w-8 text-gray-400" />
+                                </div>
+                            )}
                         </div>
                         <div>
                             <h2 className="text-2xl font-bold text-white">{campaign.name}</h2>
@@ -224,11 +285,7 @@ function CampaignModal({ campaign, onClose }: { campaign: Campaign; onClose: () 
                     )}
 
                     {/* Stats */}
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center bg-white/5 border border-white/10 rounded-xl p-4">
-                            <p className="text-2xl font-bold text-white">{campaign._count.submissions}</p>
-                            <p className="text-xs text-gray-500 mt-1">Submissions</p>
-                        </div>
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="text-center bg-white/5 border border-white/10 rounded-xl p-4">
                             <p className="text-2xl font-bold text-white">
                                 {(campaign.totalViews || 0).toLocaleString()}
@@ -338,8 +395,8 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
             {/* Header with thumbnail */}
             <div className="flex items-start gap-4 mb-4">
                 {/* Game Thumbnail */}
-                {thumbnail && (
-                    <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                    {thumbnail ? (
                         <img
                             src={thumbnail}
                             alt={campaign.name}
@@ -348,86 +405,95 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
                                 (e.target as HTMLImageElement).style.display = 'none';
                             }}
                         />
-                    </div>
-                )}
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <Gamepad2 className="h-7 w-7 text-gray-400" />
+                        </div>
+                    )}
+                </div>
 
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
-                        {campaign.name}
-                    </h3>
-                    <a
-                        href={campaign.game}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-400 hover:text-blue-400 truncate block"
-                    >
-                        View Game ↗
-                    </a>
-                </div>
-
-                {/* Deadline badge */}
-                {deadline && (
-                    <span
-                        className={`flex-shrink-0 text-xs px-2 py-1 rounded-full ${isExpiringSoon
-                            ? "bg-red-500/10 text-red-400"
-                            : "bg-blue-500/10 text-blue-400"
-                            }`}
-                    >
-                        Ends {deadline.toLocaleDateString()}
-                    </span>
-                )}
-            </div>
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-400" />
-                    <span className="text-sm text-gray-300">
-                        {formatPayout(campaign.payout)}
-                        {campaign.payoutLong && (
-                            <span className="text-gray-500 ml-1">
-                                ({formatPayout(campaign.payoutLong)} long)
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
+                            {campaign.name}
+                        </h3>
+                        {!isFull && (
+                            <span className="shrink-0 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold border border-green-500/30 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                Active
                             </span>
                         )}
-                    </span>
+                        {isFull && (
+                            <span className="shrink-0 px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-xs font-medium border border-red-500/20">
+                                Full
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                        <a
+                            href={campaign.game}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-gray-500 hover:text-blue-400 transition-colors"
+                        >
+                            View Game ↗
+                        </a>
+                        <span className="text-gray-700">•</span>
+                        <div className="flex items-center gap-1 text-gray-500">
+                            <Clock className="h-3.5 w-3.5" />
+                            Started {getRelativeTime(campaign.createdAt)}
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Video className="h-4 w-4 text-purple-400" />
-                    <span className="text-sm text-gray-300">
-                        {campaign._count.submissions} submissions
-                    </span>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <p className="text-xs text-gray-500 mb-1">Short Form</p>
+                    <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-green-400" />
+                        <span className="text-sm font-semibold text-white">
+                            {formatPayout(campaign.payout)}
+                        </span>
+                    </div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <p className="text-xs text-gray-500 mb-1">Long Form</p>
+                    <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-purple-400" />
+                        <span className="text-sm font-semibold text-white">
+                            {campaign.payoutLong ? formatPayout(campaign.payoutLong) : "N/A"}
+                        </span>
+                    </div>
                 </div>
             </div>
 
             {/* Budget Progress Bar */}
-            {campaign.budget && (() => {
-                const budgetMatch = campaign.budget.match(/[\d,]+/);
-                const budgetAmount = budgetMatch ? parseFloat(budgetMatch[0].replace(/,/g, '')) : 0;
-                const spent = Math.min(campaign.totalSpent || 0, budgetAmount); // Cap at budget
-                const percentUsed = budgetAmount > 0 ? Math.min(100, (spent / budgetAmount) * 100) : 0;
-
-                return budgetAmount > 0 ? (
-                    <div className="mb-4">
-                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Budget Used</span>
-                            <span>${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} / ${budgetAmount.toLocaleString()}</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                            <div
-                                className={`h-full rounded-full transition-all duration-500 ${percentUsed >= 90 ? 'bg-red-500' : percentUsed >= 70 ? 'bg-yellow-500' : 'bg-green-500'
-                                    }`}
-                                style={{ width: `${percentUsed}%` }}
-                            />
-                        </div>
-                        {isFull && (
-                            <p className="text-xs text-red-400 mt-1 font-semibold">Campaign Full - No longer accepting submissions</p>
-                        )}
-                        {!isFull && percentUsed >= 90 && (
-                            <p className="text-xs text-red-400 mt-1">Almost full!</p>
-                        )}
+            {budgetAmount > 0 && (
+                <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1.5">
+                        <span className="text-gray-500">Budget Usage</span>
+                        <span className={`font-medium ${percentUsed >= 90 ? 'text-red-400' : percentUsed >= 70 ? 'text-yellow-400' : 'text-green-400'}`}>
+                            {percentUsed.toFixed(0)}%
+                        </span>
                     </div>
-                ) : null;
-            })()}
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all duration-500 ${percentUsed >= 90 ? 'bg-red-500' :
+                                percentUsed >= 70 ? 'bg-yellow-500' :
+                                    'bg-green-500'
+                                }`}
+                            style={{ width: `${percentUsed}%` }}
+                        />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} spent</span>
+                        <span>${budgetAmount.toLocaleString()} total</span>
+                    </div>
+                </div>
+            )}
 
             {/* Platforms with icons */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -436,18 +502,33 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
                 ))}
             </div>
 
-            {/* Actions */}
-            <Link
-                href={isFull ? "#" : `/dashboard/submit?campaign=${campaign.id}`}
-                onClick={(e) => isFull && e.preventDefault()}
-                className={`flex items-center justify-center gap-2 w-full h-10 rounded-xl text-sm font-medium transition-colors ${isFull
-                    ? "bg-gray-500/10 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                    }`}
-            >
-                {isFull ? "Campaign Full" : "Submit Video"}
-                {!isFull && <ChevronRight className="h-4 w-4" />}
-            </Link>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick();
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                >
+                    View Details
+                    <ArrowRight className="h-4 w-4" />
+                </button>
+                <Link
+                    href={isFull ? "#" : `/dashboard/submit?campaign=${campaign.id}`}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (isFull) e.preventDefault();
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all duration-300 ${isFull
+                        ? "bg-gray-500/10 text-gray-500 cursor-not-allowed border border-gray-500/10"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
+                >
+                    {isFull ? "Campaign Full" : "Submit Video"}
+                    {!isFull && <ChevronRight className="h-4 w-4" />}
+                </Link>
+            </div>
         </motion.div>
     );
 }
