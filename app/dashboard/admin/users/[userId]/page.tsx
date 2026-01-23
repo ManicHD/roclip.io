@@ -22,6 +22,8 @@ import {
     Save,
     X,
     RotateCcw,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-react";
 import ConfirmModal from "@/app/components/ConfirmModal";
 
@@ -46,6 +48,8 @@ interface Submission {
     manualViewCount?: number;
     status: string;
     earnings: number;
+    customRate?: number | null; // Custom RPM override
+    campaignRate: number; // Default campaign rate
     campaignName: string;
     createdAt: string;
 }
@@ -63,6 +67,7 @@ interface Payout {
 interface UserDetail {
     discordId: string;
     username: string;
+    avatar: string | null;
     totalEarnings: number;
     totalPaid: number;
     pendingBalance: number;
@@ -89,6 +94,17 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
     const [processing, setProcessing] = useState(false);
     const [payoutMessage, setPayoutMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [editingViews, setEditingViews] = useState<{ [key: number]: number }>({});
+    const [editingRates, setEditingRates] = useState<{ [key: number]: string }>({});
+
+    // List expansion states
+    const [showAllCampaigns, setShowAllCampaigns] = useState(false);
+    const [showAllSubmissions, setShowAllSubmissions] = useState(false);
+    const [showAllPayouts, setShowAllPayouts] = useState(false);
+
+    // Initial display limits
+    const CAMPAIGNS_LIMIT = 5;
+    const SUBMISSIONS_LIMIT = 5;
+    const PAYOUTS_LIMIT = 5;
     const [confirmModal, setConfirmModal] = useState<{
         isOpen: boolean;
         title: string;
@@ -274,6 +290,78 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
         }
     };
 
+    const handleUpdateRate = async (submissionId: number, newRate: string) => {
+        const rateValue = newRate.trim() === '' ? null : parseFloat(newRate);
+        if (rateValue !== null && (isNaN(rateValue) || rateValue < 0)) {
+            setEditingRates(prev => {
+                const updated = { ...prev };
+                delete updated[submissionId];
+                return updated;
+            });
+            return;
+        }
+
+        setConfirmModal({
+            isOpen: true,
+            title: "Update Custom RPM",
+            message: rateValue === null
+                ? "Revert to campaign default rate?"
+                : `Set custom rate to $${rateValue.toFixed(2)} per 1k views?`,
+            variant: "warning",
+            onConfirm: () => updateRateConfirmed(submissionId, rateValue),
+        });
+    };
+
+    const updateRateConfirmed = async (submissionId: number, newRate: number | null) => {
+        try {
+            const res = await fetch(
+                `${API_URL}/api/admin/submissions/${submissionId}/rate`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ customRate: newRate }),
+                }
+            );
+
+            if (!res.ok) throw new Error("Failed to update rate");
+
+            // Clear editing state
+            setEditingRates(prev => {
+                const updated = { ...prev };
+                delete updated[submissionId];
+                return updated;
+            });
+
+            // Refresh user data
+            const refreshRes = await fetch(
+                `${API_URL}/api/admin/users/${resolvedParams.userId}`,
+                { credentials: "include" }
+            );
+            if (refreshRes.ok) {
+                const refreshData = await refreshRes.json();
+                setUser(refreshData);
+            }
+        } catch (err) {
+            setError("Failed to update custom rate");
+            setEditingRates(prev => {
+                const updated = { ...prev };
+                delete updated[submissionId];
+                return updated;
+            });
+        }
+    };
+
+    const handleRevertToDefaultRate = async (submissionId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Revert to Campaign Rate",
+            message: "Remove custom rate and use campaign default?",
+            variant: "warning",
+            onConfirm: () => updateRateConfirmed(submissionId, null),
+        });
+    };
+
     const handleDeleteSubmission = async (submissionId: number, campaignName: string) => {
         setConfirmModal({
             isOpen: true,
@@ -435,10 +523,18 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
             >
                 <div className="flex items-start justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                            <span className="text-2xl font-bold text-white">
-                                {user.username?.[0]?.toUpperCase() || "?"}
-                            </span>
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden border border-white/10">
+                            {user.avatar ? (
+                                <img
+                                    src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
+                                    alt={user.username}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-2xl font-bold text-white">
+                                    {user.username?.[0]?.toUpperCase() || "?"}
+                                </span>
+                            )}
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">{user.username}</h1>
@@ -616,7 +712,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                                 </tr>
                             </thead>
                             <tbody>
-                                {user.earningsByCampaign.map((campaign) => (
+                                {(showAllCampaigns
+                                    ? user.earningsByCampaign
+                                    : user.earningsByCampaign.slice(0, CAMPAIGNS_LIMIT)
+                                ).map((campaign) => (
                                     <tr
                                         key={campaign.campaignId}
                                         className="border-b border-white/5"
@@ -656,6 +755,24 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                                 </tr>
                             </tfoot>
                         </table>
+                        {user.earningsByCampaign.length > CAMPAIGNS_LIMIT && (
+                            <button
+                                onClick={() => setShowAllCampaigns(!showAllCampaigns)}
+                                className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors mx-auto"
+                            >
+                                {showAllCampaigns ? (
+                                    <>
+                                        <ChevronUp className="h-4 w-4" />
+                                        Show Less
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown className="h-4 w-4" />
+                                        See More ({user.earningsByCampaign.length - CAMPAIGNS_LIMIT} more)
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
                 )}
             </motion.div>
@@ -667,133 +784,248 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                 transition={{ delay: 0.2 }}
                 className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl"
             >
-                <h2 className="text-lg font-semibold text-white mb-4">Accepted Submissions</h2>
-                {user.submissions.length === 0 ? (
-                    <p className="text-gray-500">No submissions yet</p>
-                ) : (
-                    <div className="space-y-3">
-                        {user.submissions.filter(sub => sub.status === 'ACCEPTED').slice(0, 20).map((sub) => (
-                            <div
-                                key={sub.id}
-                                className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5"
-                            >
-                                <div className="flex items-center gap-3 flex-1">
-                                    <div className="flex flex-col flex-1">
-                                        <span className="text-sm font-medium text-white truncate max-w-xs" title={sub.videoTitle}>
-                                            {sub.videoTitle || sub.campaignName}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                            {sub.videoTitle ? `${sub.campaignName} · ` : ''}{sub.platform} · {sub.videoType} · {formatDate(sub.createdAt)}
-                                        </span>
-                                    </div>
-                                </div>
+                {(() => {
+                    const acceptedSubmissions = user.submissions.filter(sub => sub.status === 'ACCEPTED');
+                    return (
+                        <>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-semibold text-white">Accepted Submissions</h2>
+                                {acceptedSubmissions.length > 0 && (
+                                    <span className="text-sm text-gray-400">{acceptedSubmissions.length} total</span>
+                                )}
+                            </div>
+                            {acceptedSubmissions.length === 0 ? (
+                                <p className="text-gray-500">No submissions yet</p>
+                            ) : (
+                                <>
+                                    <div className="space-y-3">
+                                        {(showAllSubmissions
+                                            ? acceptedSubmissions
+                                            : acceptedSubmissions.slice(0, SUBMISSIONS_LIMIT)
+                                        ).map((sub) => (
+                                            <div
+                                                key={sub.id}
+                                                className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5"
+                                            >
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    <div className="flex flex-col flex-1">
+                                                        <span className="text-sm font-medium text-white truncate max-w-xs" title={sub.videoTitle}>
+                                                            {sub.videoTitle || sub.campaignName}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {sub.videoTitle ? `${sub.campaignName} · ` : ''}{sub.platform} · {sub.videoType} · {formatDate(sub.createdAt)}
+                                                        </span>
+                                                    </div>
+                                                </div>
 
-                                <div className="flex items-center gap-4">
-                                    {/* View Count Editor */}
-                                    <div className="flex flex-col items-end">
-                                        <div className="flex items-center gap-2">
-                                            <Eye className="h-3.5 w-3.5 text-gray-400" />
-                                            {editingViews[sub.id] !== undefined ? (
+                                                <div className="flex items-center gap-4">
+                                                    {/* View Count Editor */}
+                                                    <div className="flex flex-col items-end">
+                                                        <div className="flex items-center gap-2">
+                                                            <Eye className="h-3.5 w-3.5 text-gray-400" />
+                                                            {editingViews[sub.id] !== undefined ? (
+                                                                <>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={editingViews[sub.id]}
+                                                                        onChange={(e) => {
+                                                                            const val = parseInt(e.target.value) || 0;
+                                                                            setEditingViews(prev => ({ ...prev, [sub.id]: val }));
+                                                                        }}
+                                                                        className="w-24 px-2 py-1 text-sm text-white bg-white/5 border border-blue-500 rounded-lg focus:outline-none"
+                                                                        autoFocus
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => handleUpdateViews(sub.id, editingViews[sub.id])}
+                                                                        className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 transition-colors"
+                                                                        title="Save"
+                                                                    >
+                                                                        <Save className="h-3.5 w-3.5 text-green-400" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingViews(prev => {
+                                                                                const updated = { ...prev };
+                                                                                delete updated[sub.id];
+                                                                                return updated;
+                                                                            });
+                                                                        }}
+                                                                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                                                                        title="Cancel"
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5 text-red-400" />
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <span className="w-24 px-2 py-1 text-sm text-white">
+                                                                        {(sub.manualViewCount ?? sub.currentViews).toLocaleString()}
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingViews(prev => ({
+                                                                                ...prev,
+                                                                                [sub.id]: sub.manualViewCount ?? sub.currentViews
+                                                                            }));
+                                                                        }}
+                                                                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                                                                        title="Edit views"
+                                                                    >
+                                                                        <Edit3 className="h-3.5 w-3.5 text-gray-400" />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        {sub.manualViewCount && (
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-xs text-yellow-400">
+                                                                    Manual ({sub.currentViews.toLocaleString()} actual)
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => handleRevertToLive(sub.id)}
+                                                                    className="flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors"
+                                                                    title="Revert to live views"
+                                                                >
+                                                                    <RotateCcw className="h-3 w-3" />
+                                                                    Live
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Custom RPM Editor */}
+                                                    <div className="flex flex-col items-end">
+                                                        <div className="flex items-center gap-2">
+                                                            <DollarSign className="h-3.5 w-3.5 text-gray-400" />
+                                                            {editingRates[sub.id] !== undefined ? (
+                                                                <>
+                                                                    <div className="flex items-center">
+                                                                        <span className="text-xs text-gray-500 mr-1">$</span>
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            min="0"
+                                                                            value={editingRates[sub.id]}
+                                                                            onChange={(e) => {
+                                                                                setEditingRates(prev => ({ ...prev, [sub.id]: e.target.value }));
+                                                                            }}
+                                                                            className="w-16 px-2 py-1 text-sm text-white bg-white/5 border border-purple-500 rounded-lg focus:outline-none"
+                                                                            placeholder={sub.campaignRate?.toString() || "0"}
+                                                                            autoFocus
+                                                                        />
+                                                                        <span className="text-xs text-gray-500 ml-1">/1k</span>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => handleUpdateRate(sub.id, editingRates[sub.id])}
+                                                                        className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 transition-colors"
+                                                                        title="Save"
+                                                                    >
+                                                                        <Save className="h-3.5 w-3.5 text-green-400" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingRates(prev => {
+                                                                                const updated = { ...prev };
+                                                                                delete updated[sub.id];
+                                                                                return updated;
+                                                                            });
+                                                                        }}
+                                                                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                                                                        title="Cancel"
+                                                                    >
+                                                                        <X className="h-3.5 w-3.5 text-red-400" />
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <span className={`text-sm ${sub.customRate ? 'text-purple-400 font-medium' : 'text-gray-400'}`}>
+                                                                        ${(sub.customRate ?? sub.campaignRate)?.toFixed(2)}/1k
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingRates(prev => ({
+                                                                                ...prev,
+                                                                                [sub.id]: (sub.customRate ?? sub.campaignRate)?.toString() || ''
+                                                                            }));
+                                                                        }}
+                                                                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                                                                        title="Edit RPM"
+                                                                    >
+                                                                        <Edit3 className="h-3.5 w-3.5 text-gray-400" />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        {sub.customRate && (
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-xs text-purple-400">
+                                                                    Custom (default: ${sub.campaignRate?.toFixed(2)})
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => handleRevertToDefaultRate(sub.id)}
+                                                                    className="flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-colors"
+                                                                    title="Revert to campaign rate"
+                                                                >
+                                                                    <RotateCcw className="h-3 w-3" />
+                                                                    Default
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Earnings */}
+                                                    <div className="text-right min-w-[80px]">
+                                                        <p className="text-sm font-medium text-green-400">
+                                                            ${sub.earnings.toFixed(2)}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Actions */}
+                                                    <div className="flex items-center gap-2">
+                                                        <a
+                                                            href={sub.videoLink}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                                                            title="Open video"
+                                                        >
+                                                            <ExternalLink className="h-4 w-4 text-gray-400" />
+                                                        </a>
+                                                        <button
+                                                            onClick={() => handleDeleteSubmission(sub.id, sub.campaignName)}
+                                                            className="p-2 rounded-lg hover:bg-red-500/10 transition-colors group"
+                                                            title="Delete submission"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-gray-400 group-hover:text-red-400" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {acceptedSubmissions.length > SUBMISSIONS_LIMIT && (
+                                        <button
+                                            onClick={() => setShowAllSubmissions(!showAllSubmissions)}
+                                            className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors mx-auto"
+                                        >
+                                            {showAllSubmissions ? (
                                                 <>
-                                                    <input
-                                                        type="number"
-                                                        value={editingViews[sub.id]}
-                                                        onChange={(e) => {
-                                                            const val = parseInt(e.target.value) || 0;
-                                                            setEditingViews(prev => ({ ...prev, [sub.id]: val }));
-                                                        }}
-                                                        className="w-24 px-2 py-1 text-sm text-white bg-white/5 border border-blue-500 rounded-lg focus:outline-none"
-                                                        autoFocus
-                                                    />
-                                                    <button
-                                                        onClick={() => handleUpdateViews(sub.id, editingViews[sub.id])}
-                                                        className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 transition-colors"
-                                                        title="Save"
-                                                    >
-                                                        <Save className="h-3.5 w-3.5 text-green-400" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingViews(prev => {
-                                                                const updated = { ...prev };
-                                                                delete updated[sub.id];
-                                                                return updated;
-                                                            });
-                                                        }}
-                                                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                                                        title="Cancel"
-                                                    >
-                                                        <X className="h-3.5 w-3.5 text-red-400" />
-                                                    </button>
+                                                    <ChevronUp className="h-4 w-4" />
+                                                    Show Less
                                                 </>
                                             ) : (
                                                 <>
-                                                    <span className="w-24 px-2 py-1 text-sm text-white">
-                                                        {(sub.manualViewCount ?? sub.currentViews).toLocaleString()}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingViews(prev => ({
-                                                                ...prev,
-                                                                [sub.id]: sub.manualViewCount ?? sub.currentViews
-                                                            }));
-                                                        }}
-                                                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                                                        title="Edit views"
-                                                    >
-                                                        <Edit3 className="h-3.5 w-3.5 text-gray-400" />
-                                                    </button>
+                                                    <ChevronDown className="h-4 w-4" />
+                                                    See More ({acceptedSubmissions.length - SUBMISSIONS_LIMIT} more)
                                                 </>
                                             )}
-                                        </div>
-                                        {sub.manualViewCount && (
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-xs text-yellow-400">
-                                                    Manual ({sub.currentViews.toLocaleString()} actual)
-                                                </span>
-                                                <button
-                                                    onClick={() => handleRevertToLive(sub.id)}
-                                                    className="flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors"
-                                                    title="Revert to live views"
-                                                >
-                                                    <RotateCcw className="h-3 w-3" />
-                                                    Live
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Earnings */}
-                                    <div className="text-right min-w-[80px]">
-                                        <p className="text-sm font-medium text-green-400">
-                                            ${sub.earnings.toFixed(2)}
-                                        </p>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-2">
-                                        <a
-                                            href={sub.videoLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                                            title="Open video"
-                                        >
-                                            <ExternalLink className="h-4 w-4 text-gray-400" />
-                                        </a>
-                                        <button
-                                            onClick={() => handleDeleteSubmission(sub.id, sub.campaignName)}
-                                            className="p-2 rounded-lg hover:bg-red-500/10 transition-colors group"
-                                            title="Delete submission"
-                                        >
-                                            <Trash2 className="h-4 w-4 text-gray-400 group-hover:text-red-400" />
                                         </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                                    )}
+                                </>
+                            )}
+                        </>
+                    );
+                })()}
             </motion.div>
 
             {/* Payout History */}
@@ -804,9 +1036,15 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                     transition={{ delay: 0.3 }}
                     className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl"
                 >
-                    <h2 className="text-lg font-semibold text-white mb-4">Payout History</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-white">Payout History</h2>
+                        <span className="text-sm text-gray-400">{user.payoutHistory.length} total</span>
+                    </div>
                     <div className="space-y-2">
-                        {user.payoutHistory.map((payout) => (
+                        {(showAllPayouts
+                            ? user.payoutHistory
+                            : user.payoutHistory.slice(0, PAYOUTS_LIMIT)
+                        ).map((payout) => (
                             <div
                                 key={payout.id}
                                 className="flex items-center justify-between p-3 rounded-xl bg-white/5"
@@ -828,6 +1066,24 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                             </div>
                         ))}
                     </div>
+                    {user.payoutHistory.length > PAYOUTS_LIMIT && (
+                        <button
+                            onClick={() => setShowAllPayouts(!showAllPayouts)}
+                            className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors mx-auto"
+                        >
+                            {showAllPayouts ? (
+                                <>
+                                    <ChevronUp className="h-4 w-4" />
+                                    Show Less
+                                </>
+                            ) : (
+                                <>
+                                    <ChevronDown className="h-4 w-4" />
+                                    See More ({user.payoutHistory.length - PAYOUTS_LIMIT} more)
+                                </>
+                            )}
+                        </button>
+                    )}
                 </motion.div>
             )}
         </div>

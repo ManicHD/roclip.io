@@ -111,10 +111,10 @@ export default function AdminCampaignsPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
-                        <span className="text-green-400 font-medium">{activeCampaigns.length} Active</span>
+                    <div className="px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                        <span className="text-blue-400 font-medium">{activeCampaigns.length} Active</span>
                     </div>
-                    <div className="px-4 py-2 rounded-xl bg-gray-500/10 border border-gray-500/20">
+                    <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10">
                         <span className="text-gray-400 font-medium">{inactiveCampaigns.length} Inactive</span>
                     </div>
                 </div>
@@ -124,7 +124,7 @@ export default function AdminCampaignsPage() {
             {activeCampaigns.length > 0 && (
                 <div className="space-y-4">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-green-400" />
+                        <Zap className="h-5 w-5 text-blue-400" />
                         Active Campaigns
                     </h2>
                     <div className="grid gap-4">
@@ -139,17 +139,17 @@ export default function AdminCampaignsPage() {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                                        className="group relative rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/5 via-emerald-500/5 to-transparent backdrop-blur-xl overflow-hidden hover:border-green-500/40 transition-all duration-300"
+                                        className="group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden hover:border-blue-500/30 transition-all duration-300"
                                     >
                                         {/* Glow effect on hover */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/5 to-green-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                         <div className="relative p-6">
                                             <div className="flex items-start justify-between gap-6">
                                                 {/* Left: Campaign info */}
                                                 <div className="flex items-start gap-4 flex-1">
-                                                    <div className="rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 p-4 border border-green-500/20">
-                                                        <Megaphone className="h-7 w-7 text-green-400" />
+                                                    <div className="rounded-2xl bg-blue-500/10 p-4 border border-blue-500/20">
+                                                        <Megaphone className="h-7 w-7 text-blue-400" />
                                                     </div>
 
                                                     <div className="flex-1 min-w-0">
@@ -158,8 +158,8 @@ export default function AdminCampaignsPage() {
                                                             <h3 className="text-xl font-bold text-white truncate">
                                                                 {campaign.name}
                                                             </h3>
-                                                            <span className="shrink-0 px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold border border-green-500/30 flex items-center gap-1">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                                            <span className="shrink-0 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-semibold border border-blue-500/30 flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                                                                 Active
                                                             </span>
                                                         </div>
@@ -213,7 +213,7 @@ export default function AdminCampaignsPage() {
                                                                 <div className="flex items-center gap-2">
                                                                     <TrendingUp className="h-4 w-4 text-yellow-400" />
                                                                     <p className="text-lg font-semibold text-white">
-                                                                        ${spentNum.toFixed(2)}
+                                                                        ${spentNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -230,8 +230,8 @@ export default function AdminCampaignsPage() {
                                                             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                                                                 <div
                                                                     className={`h-full rounded-full transition-all duration-500 ${budgetProgress >= 90 ? 'bg-gradient-to-r from-red-500 to-red-400' :
-                                                                            budgetProgress >= 70 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
-                                                                                'bg-gradient-to-r from-green-500 to-emerald-400'
+                                                                        budgetProgress >= 70 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
+                                                                            'bg-gradient-to-r from-green-500 to-emerald-400'
                                                                         }`}
                                                                     style={{ width: `${budgetProgress}%` }}
                                                                 />
@@ -242,7 +242,7 @@ export default function AdminCampaignsPage() {
 
                                                 {/* Right: View Details Button */}
                                                 <div className="shrink-0 flex flex-col items-end justify-between h-full">
-                                                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 font-medium text-sm group-hover:bg-green-500/20 group-hover:border-green-500/40 transition-all duration-300">
+                                                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-medium text-sm group-hover:bg-blue-500/10 group-hover:border-blue-500/30 group-hover:text-blue-400 transition-all duration-300">
                                                         View Details
                                                         <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                                     </div>
@@ -302,7 +302,7 @@ export default function AdminCampaignsPage() {
                                                             <span className="text-gray-700">•</span>
                                                             <span className="text-gray-500">{campaign._count?.submissions || 0} submissions</span>
                                                             <span className="text-gray-700">•</span>
-                                                            <span className="text-gray-500">${spentNum.toFixed(0)} / ${budgetNum.toLocaleString()}</span>
+                                                            <span className="text-gray-500">${spentNum.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} / ${budgetNum.toLocaleString()}</span>
                                                         </div>
                                                     </div>
                                                 </div>

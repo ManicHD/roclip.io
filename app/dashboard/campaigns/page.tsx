@@ -16,6 +16,7 @@ import {
     Gamepad2,
     ArrowRight,
     Zap,
+    Pause,
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -113,239 +114,281 @@ interface Campaign {
     budgetStatus?: 'available' | 'almost_full' | 'full';
     canSubmit?: boolean;
     percentageUsed?: number;
+    paused?: boolean;
     _count: {
         submissions: number;
     };
 }
 
 // Campaign Detail Modal
+// Campaign Detail Modal
 function CampaignModal({ campaign, onClose }: { campaign: Campaign; onClose: () => void }) {
     const platforms = campaign.allowedPlatforms.split(",").map((p) => p.trim());
-    const deadline = campaign.deadline ? new Date(campaign.deadline) : null;
 
+    // Calculate stats
     const budgetMatch = campaign.budget?.match(/[\d,]+/);
     const budgetAmount = budgetMatch ? parseFloat(budgetMatch[0].replace(/,/g, '')) : 0;
-    const spent = Math.min(campaign.totalSpent || 0, budgetAmount); // Cap at budget
+    const spent = Math.min(campaign.totalSpent || 0, budgetAmount);
     const percentUsed = budgetAmount > 0 ? Math.min(100, (spent / budgetAmount) * 100) : 0;
-    // Trust backend's canSubmit calculation which checks budget, acceptingSubmissions, and active status
     const isFull = campaign.canSubmit === false;
+    const isPaused = campaign.paused === true;
 
     const [thumbnail, setThumbnail] = useState<string | null>(campaign.thumbnail || null);
 
     useEffect(() => {
-        // If already have thumbnail, don't fetch
         if (campaign.thumbnail) return;
-
-        // Try to extract universe ID from URL for Roblox games
         const match = campaign.game.match(/games\/(\d+)/);
         if (!match) return;
-
         const placeId = match[1];
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-        // Fetch thumbnail via our backend proxy
         fetch(`${API_URL}/api/roblox/thumbnail/${placeId}`)
             .then(res => res.json())
-            .then(data => {
-                if (data.imageUrl) {
-                    setThumbnail(data.imageUrl);
-                }
-            })
+            .then(data => { if (data.imageUrl) setThumbnail(data.imageUrl); })
             .catch(err => console.error('Failed to fetch game thumbnail:', err));
     }, [campaign.game, campaign.thumbnail]);
+
+    // Description Parser (Discord-like)
+    const renderDescription = (text: string) => {
+        return text.split('\n').map((line, i) => {
+            const trimmed = line.trim();
+            if (!trimmed) return <div key={i} className="h-4" />;
+
+            const parseContent = (content: string) => {
+                const parts = content.split(/(\*\*.*?\*\*)/g);
+                return parts.map((part, index) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        return <strong key={index} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+                    }
+                    return part;
+                });
+            };
+
+            if (trimmed.startsWith('-')) {
+                return (
+                    <div key={i} className="flex items-start gap-3 mb-1 pl-1">
+                        <span className="text-blue-400 mt-1.5 text-[10px]">●</span>
+                        <span className="text-gray-300 flex-1 leading-relaxed">{parseContent(trimmed.substring(1).trim())}</span>
+                    </div>
+                );
+            }
+
+            return <p key={i} className="text-gray-300 mb-2 leading-relaxed">{parseContent(trimmed)}</p>;
+        });
+    };
 
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/90 backdrop-blur-md"
+            onMouseDown={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
         >
             <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-black border border-white/10 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-[#0a0a0a] border border-white/10 rounded-2xl max-w-7xl w-full shadow-2xl relative overflow-hidden"
+                onMouseDown={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 border-b border-white/10">
-                    <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
+                    <div className="flex items-center gap-5">
                         <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10">
                             {thumbnail ? (
-                                <img
-                                    src={thumbnail}
-                                    alt={campaign.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                    }}
-                                />
+                                <img src={thumbnail} alt={campaign.name} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <Gamepad2 className="h-8 w-8 text-gray-400" />
+                                    <Gamepad2 className="h-8 w-8 text-gray-600" />
                                 </div>
                             )}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-white">{campaign.name}</h2>
+                            <h2 className="text-2xl font-bold text-white tracking-tight">{campaign.name}</h2>
                             <a
                                 href={campaign.game}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-gray-500 hover:text-white transition-colors flex items-center gap-1"
+                                className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 mt-0.5"
                             >
-                                View Game <ExternalLink className="h-3 w-3" />
+                                Play on Roblox <ExternalLink className="h-3 w-3" />
                             </a>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors"
+                        className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/5"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 space-y-6">
-                    {/* Description */}
-                    <div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
-                        <p className="text-gray-300">{campaign.description}</p>
+                <div className="p-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                    {/* Key Stats Row - Styled like Dashboard */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        {/* Total Budget */}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 flex items-start justify-between group hover:bg-white/[0.07] transition-colors">
+                            <div>
+                                <p className="text-sm text-gray-400 mb-1 font-medium">Total Budget</p>
+                                <p className="text-2xl font-bold text-white">{campaign.budget}</p>
+                            </div>
+                            <div className="rounded-xl p-2.5 bg-green-500/10 text-green-400 border border-green-500/20">
+                                <DollarSign className="h-5 w-5" />
+                            </div>
+                        </div>
+
+                        {/* Total Views */}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 flex items-start justify-between group hover:bg-white/[0.07] transition-colors">
+                            <div>
+                                <p className="text-sm text-gray-400 mb-1 font-medium">Total Views</p>
+                                <p className="text-2xl font-bold text-white">{(campaign.totalViews || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-xl p-2.5 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <Eye className="h-5 w-5" />
+                            </div>
+                        </div>
+
+                        {/* Submissions */}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 flex items-start justify-between group hover:bg-white/[0.07] transition-colors">
+                            <div>
+                                <p className="text-sm text-gray-400 mb-1 font-medium">Submissions</p>
+                                <p className="text-2xl font-bold text-white">{campaign._count?.submissions || 0}</p>
+                            </div>
+                            <div className="rounded-xl p-2.5 bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                <Video className="h-5 w-5" />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Payout Rates */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <div className="flex items-center gap-2 text-gray-400 mb-1">
-                                <Video className="h-4 w-4" />
-                                <span className="text-sm font-medium">Shorts Payout</span>
+                    {/* Main Grid: Description + Requirements */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        {/* Description */}
+                        <div className="lg:col-span-1 flex flex-col h-full">
+                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                                <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                                Description
+                            </h3>
+                            <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-5 flex-1 overflow-y-auto max-h-[400px] text-sm text-gray-300 leading-relaxed shadow-inner">
+                                {renderDescription(campaign.description)}
                             </div>
-                            <p className="text-xl font-bold text-white">{formatPayout(campaign.payout)}</p>
-                            {campaign.viewCap && (
-                                <p className="text-xs text-gray-600 mt-1">Max {campaign.viewCap.toLocaleString()} views</p>
-                            )}
                         </div>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <div className="flex items-center gap-2 text-gray-400 mb-1">
-                                <Video className="h-4 w-4" />
-                                <span className="text-sm font-medium">Long Form Payout</span>
-                            </div>
-                            <p className="text-xl font-bold text-white">
-                                {campaign.payoutLong ? formatPayout(campaign.payoutLong) : "N/A"}
-                            </p>
-                            {campaign.longViewCap && (
-                                <p className="text-xs text-gray-600 mt-1">Max {campaign.longViewCap.toLocaleString()} views</p>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Minimum Views */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <div className="flex items-center gap-2 text-gray-400 mb-1">
-                                <Eye className="h-4 w-4" />
-                                <span className="text-sm font-medium">Min Views (Shorts)</span>
+                        {/* Short Videos Requirements */}
+                        <div className="lg:col-span-1">
+                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
+                                Short Videos
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
+                                    <span className="text-sm text-gray-400">Payout Rate</span>
+                                    <span className="text-lg font-bold text-green-400">{formatPayout(campaign.payout)}</span>
+                                </div>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
+                                    <span className="text-sm text-gray-400">View Cap</span>
+                                    <span className="text-base font-semibold text-white">{campaign.viewCap ? campaign.viewCap.toLocaleString() : "No limit"}</span>
+                                </div>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
+                                    <span className="text-sm text-gray-400">Min Views</span>
+                                    <span className="text-base font-semibold text-white">{campaign.minViewsShorts ? campaign.minViewsShorts.toLocaleString() : "None"}</span>
+                                </div>
                             </div>
-                            <p className="text-xl font-bold text-white">
-                                {campaign.minViewsShorts ? campaign.minViewsShorts.toLocaleString() : "None"}
-                            </p>
                         </div>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <div className="flex items-center gap-2 text-gray-400 mb-1">
-                                <Eye className="h-4 w-4" />
-                                <span className="text-sm font-medium">Min Views (Long)</span>
+
+                        {/* Long Videos Requirements */}
+                        <div className="lg:col-span-1">
+                            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></span>
+                                Long Videos
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
+                                    <span className="text-sm text-gray-400">Payout Rate</span>
+                                    <span className="text-lg font-bold text-purple-400">{campaign.payoutLong ? formatPayout(campaign.payoutLong) : "N/A"}</span>
+                                </div>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
+                                    <span className="text-sm text-gray-400">View Cap</span>
+                                    <span className="text-base font-semibold text-white">{campaign.longViewCap ? campaign.longViewCap.toLocaleString() : "No limit"}</span>
+                                </div>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
+                                    <span className="text-sm text-gray-400">Min Views</span>
+                                    <span className="text-base font-semibold text-white">{campaign.minViewsLong ? campaign.minViewsLong.toLocaleString() : "None"}</span>
+                                </div>
                             </div>
-                            <p className="text-xl font-bold text-white">
-                                {campaign.minViewsLong ? campaign.minViewsLong.toLocaleString() : "None"}
-                            </p>
                         </div>
                     </div>
 
                     {/* Budget Progress */}
                     {budgetAmount > 0 && (
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">Budget Progress</span>
-                                <span className="text-white font-medium">
-                                    ${spent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} / ${budgetAmount.toLocaleString()}
-                                </span>
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+                            <div className="flex justify-between items-end mb-3">
+                                <div>
+                                    <p className="text-sm text-gray-400 font-medium mb-1">Budget Progress</p>
+                                    <p className="text-2xl font-bold text-white">${spent.toLocaleString(undefined, { maximumFractionDigits: 0 })} <span className="text-gray-500 text-lg font-normal">/ ${budgetAmount.toLocaleString()}</span></p>
+                                </div>
+                                <div className="text-right">
+                                    <span className={`text-xl font-bold ${percentUsed >= 90 ? 'text-red-400' : percentUsed >= 70 ? 'text-yellow-400' : 'text-green-400'}`}>
+                                        {percentUsed.toFixed(1)}%
+                                    </span>
+                                    <p className="text-xs text-gray-500">claimed</p>
+                                </div>
                             </div>
-                            <div className="h-3 rounded-full bg-white/10 overflow-hidden">
+                            <div className="h-4 rounded-full bg-white/[0.05] overflow-hidden border border-white/5">
                                 <div
-                                    className={`h-full rounded-full transition-all duration-500 ${percentUsed >= 90 ? 'bg-red-500' : percentUsed >= 70 ? 'bg-yellow-500' : 'bg-green-500'
-                                        }`}
+                                    className={`h-full rounded-full transition-all duration-500 ${percentUsed >= 90 ? 'bg-gradient-to-r from-red-600 to-red-400' : percentUsed >= 70 ? 'bg-gradient-to-r from-yellow-600 to-yellow-400' : 'bg-gradient-to-r from-green-600 to-green-400'}`}
                                     style={{ width: `${percentUsed}%` }}
                                 />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">{percentUsed.toFixed(1)}% used</p>
                         </div>
                     )}
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center bg-white/5 border border-white/10 rounded-xl p-4">
-                            <p className="text-2xl font-bold text-white">
-                                {(campaign.totalViews || 0).toLocaleString()}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">Total Views</p>
+                    {/* Footer: Platforms + Actions */}
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-2 border-t border-white/5">
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Available on:</span>
+                            <div className="flex gap-2">
+                                {platforms.map((p) => <PlatformBadge key={p} platform={p} />)}
+                            </div>
                         </div>
-                        <div className="text-center bg-white/5 border border-white/10 rounded-xl p-4">
-                            <p className="text-2xl font-bold text-white">
-                                {deadline ? Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : "∞"}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">Days Left</p>
+
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                            {campaign.infoLink && (
+                                <a
+                                    href={campaign.infoLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-5 py-3 rounded-xl bg-white/5 text-gray-300 text-sm font-medium hover:text-white hover:bg-white/10 transition-all border border-white/5 flex items-center gap-2"
+                                >
+                                    Read Guidelines <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                            )}
+                            <Link
+                                href={(isFull || isPaused) ? "#" : `/dashboard/submit?campaign=${campaign.id}`}
+                                onClick={(e) => {
+                                    if (isFull || isPaused) e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                className={`flex-1 md:flex-none px-10 py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 ${(isFull || isPaused)
+                                    ? "bg-[#151515] border border-white/5 text-gray-500 cursor-not-allowed"
+                                    : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white hover:scale-[1.02] hover:shadow-blue-500/20 active:scale-[0.98]"
+                                    }`}
+                            >
+                                {isPaused ? (
+                                    <><Pause className="h-4 w-4" /> Paused</>
+                                ) : isFull ? "Campaign Full" : "Submit Video"}
+                                {!isFull && !isPaused && <ChevronRight className="h-4 w-4" />}
+                            </Link>
                         </div>
                     </div>
-
-                    {/* Platforms */}
-                    <div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-2">Allowed Platforms</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {platforms.map((p) => (
-                                <PlatformBadge key={p} platform={p} />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Info Link */}
-                    {campaign.infoLink && (
-                        <a
-                            href={campaign.infoLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-sm font-medium hover:bg-white/10 hover:text-white hover:border-white/20 transition-colors"
-                        >
-                            Campaign Guidelines <ExternalLink className="h-4 w-4" />
-                        </a>
-                    )}
-
-                    {/* Submit Button */}
-                    <Link
-                        href={isFull ? "#" : `/dashboard/submit?campaign=${campaign.id}`}
-                        onClick={(e) => isFull && e.preventDefault()}
-                        className={`flex items-center justify-center gap-2 w-full h-12 rounded-xl font-semibold transition-colors ${isFull
-                            ? "bg-gray-500/20 border border-gray-500/20 text-gray-500 cursor-not-allowed"
-                            : "bg-blue-500 text-white hover:bg-blue-600"
-                            }`}
-                    >
-                        {isFull ? (
-                            <>
-                                Campaign Full
-                            </>
-                        ) : (
-                            <>
-                                Submit Video <ChevronRight className="h-5 w-5" />
-                            </>
-                        )}
-                    </Link>
                 </div>
             </motion.div>
         </motion.div>
     );
 }
+
 
 function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay: number; onClick: () => void }) {
     const platforms = campaign.allowedPlatforms.split(",").map((p) => p.trim());
@@ -359,8 +402,9 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
     const budgetAmount = budgetMatch ? parseFloat(budgetMatch[0].replace(/,/g, '')) : 0;
     const spent = Math.min(campaign.totalSpent || 0, budgetAmount);
     const percentUsed = budgetAmount > 0 ? Math.min(100, (spent / budgetAmount) * 100) : 0;
-    // Trust backend's canSubmit calculation which checks budget, acceptingSubmissions, and active status
-    const isFull = campaign.canSubmit === false;
+    // Trust backend's canSubmit calculation which checks budget, acceptingSubmissions, active status, and paused
+    const isFull = campaign.canSubmit === false && !campaign.paused;
+    const isPaused = campaign.paused === true;
 
     useEffect(() => {
         // If already have thumbnail, don't fetch
@@ -417,10 +461,16 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
                         <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
                             {campaign.name}
                         </h3>
-                        {!isFull && (
+                        {!isFull && !isPaused && (
                             <span className="shrink-0 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold border border-green-500/30 flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                                 Active
+                            </span>
+                        )}
+                        {isPaused && (
+                            <span className="shrink-0 px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-semibold border border-yellow-500/30 flex items-center gap-1">
+                                <Pause className="w-3 h-3" />
+                                Paused
                             </span>
                         )}
                         {isFull && (
@@ -515,18 +565,20 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
                     <ArrowRight className="h-4 w-4" />
                 </button>
                 <Link
-                    href={isFull ? "#" : `/dashboard/submit?campaign=${campaign.id}`}
+                    href={(isFull || isPaused) ? "#" : `/dashboard/submit?campaign=${campaign.id}`}
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (isFull) e.preventDefault();
+                        if (isFull || isPaused) e.preventDefault();
                     }}
-                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all duration-300 ${isFull
+                    className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium transition-all duration-300 ${(isFull || isPaused)
                         ? "bg-gray-500/10 text-gray-500 cursor-not-allowed border border-gray-500/10"
                         : "bg-blue-500 text-white hover:bg-blue-600"
                         }`}
                 >
-                    {isFull ? "Campaign Full" : "Submit Video"}
-                    {!isFull && <ChevronRight className="h-4 w-4" />}
+                    {isPaused ? (
+                        <><Pause className="h-4 w-4" /> Paused</>
+                    ) : isFull ? "Campaign Full" : "Submit Video"}
+                    {!isFull && !isPaused && <ChevronRight className="h-4 w-4" />}
                 </Link>
             </div>
         </motion.div>

@@ -28,6 +28,7 @@ interface CampaignEarning {
 interface User {
     discordId: string;
     username: string;
+    avatar?: string | null;
     totalViews: number;
     submissionCount: number;
     pendingBalance: number;
@@ -54,9 +55,11 @@ export default function AdminUsersPage() {
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<FilterType>("all");
+    const [sortBy, setSortBy] = useState<"pending-balance" | "views-desc" | "views-asc" | "earnings-desc" | "username">("pending-balance");
     const [campaignFilter, setCampaignFilter] = useState<number | null>(null);
     const [campaignsWithPending, setCampaignsWithPending] = useState<CampaignWithPending[]>([]);
     const [showCampaignDropdown, setShowCampaignDropdown] = useState(false);
+    const [showSortDropdown, setShowSortDropdown] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [minimumPayout, setMinimumPayout] = useState(100);
     const [totalPending, setTotalPending] = useState(0);
@@ -178,6 +181,28 @@ export default function AdminUsersPage() {
         if (!passesStatusFilter) return false;
 
         return true;
+    }).sort((a, b) => {
+        switch (sortBy) {
+            case "views-desc":
+                return b.totalViews - a.totalViews;
+            case "views-asc":
+                return a.totalViews - b.totalViews;
+            case "earnings-desc":
+                return b.totalEarnings - a.totalEarnings;
+            case "username":
+                return a.username.localeCompare(b.username);
+            case "pending-balance":
+            default:
+                // If campaign filter is active, sort by campaign pending amount
+                if (campaignFilter !== null) {
+                    const getCampaignPending = (u: User) => {
+                        const eu = eligibleUsers.find(e => e.discordId === u.discordId);
+                        return eu?.earningsByCampaign?.find(c => c.campaignId === campaignFilter)?.pendingEarnings || 0;
+                    };
+                    return getCampaignPending(b) - getCampaignPending(a);
+                }
+                return b.pendingBalance - a.pendingBalance;
+        }
     });
 
     if (loading) {
@@ -335,7 +360,7 @@ export default function AdminUsersPage() {
                         All Users
                     </h1>
                     <p className="text-gray-400 text-sm mt-1">
-                        {users.length} total users · ${totalPending.toFixed(2)} pending
+                        {users.length} total users · ${totalPending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pending
                     </p>
                 </div>
             </div>
@@ -392,8 +417,8 @@ export default function AdminUsersPage() {
                             setShowCampaignDropdown(false);
                         }}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter !== "all"
-                            ? "bg-blue-500 text-white"
-                            : "bg-white/5 text-gray-400 hover:bg-white/10"
+                            ? "bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-lg"
+                            : "bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:border-white/10"
                             }`}
                     >
                         <Filter className="h-4 w-4" />
@@ -405,7 +430,7 @@ export default function AdminUsersPage() {
                     </button>
 
                     {showStatusDropdown && (
-                        <div className="absolute top-full left-0 mt-2 z-20 w-52 rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-xl shadow-xl">
+                        <div className="absolute top-full left-0 mt-2 z-20 w-52 rounded-xl border border-white/10 bg-black/60 backdrop-blur-2xl shadow-xl overflow-hidden">
                             {[
                                 { value: "all" as FilterType, label: "All Users" },
                                 { value: "eligible" as FilterType, label: "Eligible (≥ $" + minimumPayout + ")" },
@@ -419,10 +444,54 @@ export default function AdminUsersPage() {
                                         setShowStatusDropdown(false);
                                     }}
                                     className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center justify-between ${i > 0 ? "border-t border-white/5" : ""
-                                        } ${filter === f.value ? "text-blue-400 bg-blue-500/10" : "text-white"}`}
+                                        } ${filter === f.value ? "text-white bg-white/10 font-medium" : "text-gray-300"}`}
                                 >
                                     {f.label}
                                     {filter === f.value && <CheckCircle className="h-4 w-4" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="relative">
+                    <button
+                        onClick={() => {
+                            setShowSortDropdown(!showSortDropdown);
+                            setShowCampaignDropdown(false);
+                            setShowStatusDropdown(false);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-white hover:bg-white/10 transition-all"
+                    >
+                        {sortBy === "pending-balance" ? "Sort: Pending Balance" :
+                            sortBy === "views-desc" ? "Sort: Views (High-Low)" :
+                                sortBy === "views-asc" ? "Sort: Views (Low-High)" :
+                                    sortBy === "earnings-desc" ? "Sort: Earnings" :
+                                        "Sort: Username"}
+                        <ChevronDown className={`h-4 w-4 transition-transform ${showSortDropdown ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {showSortDropdown && (
+                        <div className="absolute top-full left-0 mt-2 z-20 w-52 rounded-xl border border-white/10 bg-black/60 backdrop-blur-2xl shadow-xl overflow-hidden">
+                            {[
+                                { value: "pending-balance", label: "Pending Balance" },
+                                { value: "views-desc", label: "Views (High → Low)" },
+                                { value: "views-asc", label: "Views (Low → High)" },
+                                { value: "earnings-desc", label: "Total Earnings" },
+                                { value: "username", label: "Username" },
+                            ].map((s, i) => (
+                                <button
+                                    key={s.value}
+                                    onClick={() => {
+                                        setSortBy(s.value as any);
+                                        setShowSortDropdown(false);
+                                    }}
+                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center justify-between ${i > 0 ? "border-t border-white/5" : ""
+                                        } ${sortBy === s.value ? "text-white bg-white/10 font-medium" : "text-gray-300"}`}
+                                >
+                                    {s.label}
+                                    {sortBy === s.value && <CheckCircle className="h-4 w-4" />}
                                 </button>
                             ))}
                         </div>
@@ -450,13 +519,13 @@ export default function AdminUsersPage() {
                         </button>
 
                         {showCampaignDropdown && (
-                            <div className="absolute top-full left-0 mt-2 z-20 w-72 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-xl shadow-xl">
+                            <div className="absolute top-full left-0 mt-2 z-20 w-72 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-black/60 backdrop-blur-2xl shadow-xl">
                                 <button
                                     onClick={() => {
                                         setCampaignFilter(null);
                                         setShowCampaignDropdown(false);
                                     }}
-                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center justify-between ${campaignFilter === null ? "text-purple-400 bg-purple-500/10" : "text-white"
+                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center justify-between ${campaignFilter === null ? "text-white bg-white/10 font-medium" : "text-gray-300"
                                         }`}
                                 >
                                     All Campaigns
@@ -469,13 +538,13 @@ export default function AdminUsersPage() {
                                             setCampaignFilter(campaign.id);
                                             setShowCampaignDropdown(false);
                                         }}
-                                        className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors border-t border-white/5 ${campaignFilter === campaign.id ? "text-purple-400 bg-purple-500/10" : "text-white"
+                                        className={`w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors border-t border-white/5 ${campaignFilter === campaign.id ? "text-white bg-white/10 font-medium" : "text-gray-300"
                                             }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <span className="truncate">{campaign.name}</span>
                                             <span className="text-green-400 text-xs font-medium ml-2">
-                                                ${campaign.pendingTotal.toFixed(2)}
+                                                ${campaign.pendingTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     </button>
@@ -519,10 +588,18 @@ export default function AdminUsersPage() {
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group">
                                     <div className="flex items-center gap-4">
                                         {/* Avatar */}
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                                            <span className="text-white font-medium">
-                                                {user.username?.[0]?.toUpperCase() || "?"}
-                                            </span>
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+                                            {user.avatar ? (
+                                                <img
+                                                    src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
+                                                    alt={user.username}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-white font-medium">
+                                                    {user.username?.[0]?.toUpperCase() || "?"}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Info */}
@@ -564,7 +641,7 @@ export default function AdminUsersPage() {
                                                         : "text-white"
                                                     }`}
                                             >
-                                                ${getUserPendingAmount(user).toFixed(2)}
+                                                ${getUserPendingAmount(user).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </p>
                                         </div>
 
@@ -579,7 +656,7 @@ export default function AdminUsersPage() {
                                                 </span>
                                             ) : (
                                                 <span className="px-2 py-1 rounded-lg text-xs bg-gray-500/10 text-gray-400 border border-gray-500/20">
-                                                    ${(minimumPayout - getUserPendingAmount(user)).toFixed(0)} needed
+                                                    ${(minimumPayout - getUserPendingAmount(user)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} needed
                                                 </span>
                                             )}
                                             {/* Stripe Status */}
@@ -613,7 +690,7 @@ export default function AdminUsersPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gray-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                        className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
                     >
                         <h3 className="text-xl font-bold text-white mb-4">
                             Confirm Bulk Payout
@@ -649,7 +726,7 @@ export default function AdminUsersPage() {
                                     ${filteredUsers
                                         .filter((u) => isUserEligible(u) && u.stripeConnected)
                                         .reduce((sum, u) => sum + getUserPendingAmount(u), 0)
-                                        .toFixed(2)}
+                                        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                                 {campaignFilter !== null && (
                                     <span className="text-xs text-gray-500 ml-1">(campaign only)</span>
@@ -662,7 +739,7 @@ export default function AdminUsersPage() {
                                     .slice(0, 10)
                                     .map((u) => (
                                         <p key={u.discordId} className="text-xs text-gray-300">
-                                            {u.username} - <span className={campaignFilter !== null ? "text-purple-400" : ""}>${getUserPendingAmount(u).toFixed(2)}</span>
+                                            {u.username} - <span className={campaignFilter !== null ? "text-purple-400" : ""}>${getUserPendingAmount(u).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </p>
                                     ))}
                                 {filteredUsers.filter((u) => isUserEligible(u) && u.stripeConnected).length > 10 && (
@@ -700,7 +777,7 @@ export default function AdminUsersPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gray-900 border border-white/10 rounded-2xl p-6 max-w-2xl w-full shadow-2xl max-h-[80vh] overflow-y-auto"
+                        className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-2xl w-full shadow-2xl max-h-[80vh] overflow-y-auto"
                     >
                         <h3 className="text-xl font-bold text-white mb-4">
                             Bulk Payout Results
@@ -729,7 +806,7 @@ export default function AdminUsersPage() {
                             <p className="text-sm text-green-300">
                                 Total Amount Transferred:{" "}
                                 <span className="font-bold text-green-400">
-                                    ${payoutResults.totalAmount.toFixed(2)}
+                                    ${payoutResults.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                             </p>
                         </div>
@@ -755,7 +832,7 @@ export default function AdminUsersPage() {
                                         </div>
                                         {result.success && result.amount && (
                                             <span className="text-sm font-medium text-green-400">
-                                                ${result.amount.toFixed(2)}
+                                                ${result.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         )}
                                         {!result.success && result.error && (

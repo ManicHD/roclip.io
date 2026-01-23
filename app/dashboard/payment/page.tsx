@@ -65,6 +65,7 @@ export default function PaymentPage() {
     const [savingPreference, setSavingPreference] = useState(false);
     const [paypalEmail, setPaypalEmail] = useState("");
     const [connectingPaypal, setConnectingPaypal] = useState(false);
+    const [showAllPayouts, setShowAllPayouts] = useState(false);
 
     const fetchBalance = async () => {
         try {
@@ -353,14 +354,14 @@ export default function PaymentPage() {
                                     <div>
                                         <p className="text-sm text-gray-400">Current Balance</p>
                                         <p className="text-3xl font-bold text-white">
-                                            ${balance.pendingBalance.toFixed(2)}
+                                            ${balance.pendingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm text-gray-400">Payout Threshold</p>
                                     <p className="text-xl font-semibold text-white">
-                                        ${balance.minimumPayout.toFixed(0)}
+                                        ${balance.minimumPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </p>
                                 </div>
                             </div>
@@ -391,7 +392,7 @@ export default function PaymentPage() {
                                     </p>
                                 ) : (
                                     <p className="text-sm text-gray-400">
-                                        ${(balance.minimumPayout - balance.pendingBalance).toFixed(2)} more needed for payout
+                                        ${(balance.minimumPayout - balance.pendingBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} more needed for payout
                                     </p>
                                 )}
                             </div>
@@ -763,14 +764,14 @@ export default function PaymentPage() {
                     >
                         <h3 className="text-xl font-bold text-white mb-6">Payout History</h3>
                         <div className="space-y-3">
-                            {payouts.map((payout) => (
+                            {(showAllPayouts ? payouts : payouts.slice(0, 3)).map((payout) => (
                                 <div
                                     key={payout.id}
                                     className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
                                 >
                                     <div>
                                         <p className="font-semibold text-white text-lg">
-                                            ${payout.amount.toFixed(2)}
+                                            ${payout.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                         <p className="text-xs text-gray-400 flex items-center gap-2 mt-1">
                                             {payout.method === "paypal" ? (
@@ -790,6 +791,16 @@ export default function PaymentPage() {
                                 </div>
                             ))}
                         </div>
+                        {payouts.length > 3 && (
+                            <div className="mt-4 flex justify-center">
+                                <button
+                                    onClick={() => setShowAllPayouts(!showAllPayouts)}
+                                    className="text-sm text-gray-400 hover:text-white transition-colors underline decoration-white/20 underline-offset-4 hover:decoration-white/50"
+                                >
+                                    {showAllPayouts ? "Show Less" : "Show More"}
+                                </button>
+                            </div>
+                        )}
                     </motion.div>
                 )}
 

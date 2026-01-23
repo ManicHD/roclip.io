@@ -55,7 +55,7 @@ export default function ConfirmModal({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-black border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                        className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
                     >
                         <div className={`p-3 rounded-xl ${color.bg} ${color.border} border mb-4`}>
                             <div className="flex items-start gap-3">

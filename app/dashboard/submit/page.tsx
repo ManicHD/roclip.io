@@ -249,7 +249,7 @@ export default function SubmitPage() {
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="absolute z-20 w-full mt-2 rounded-xl border border-white/10 bg-gray-900/95 backdrop-blur-xl shadow-2xl max-h-72 overflow-y-auto"
+                                    className="absolute z-20 w-full mt-2 rounded-xl border border-white/10 bg-black shadow-2xl max-h-72 overflow-y-auto"
                                 >
                                     {campaigns.length === 0 ? (
                                         <div className="px-4 py-6 text-center text-gray-400 text-sm">
@@ -267,7 +267,7 @@ export default function SubmitPage() {
                                                         setDropdownOpen(false);
                                                     }}
                                                     className={`w-full px-4 py-3.5 text-left transition-all duration-150 flex items-start gap-3 ${selectedCampaign === campaign.id.toString()
-                                                        ? "bg-blue-500/10 border-l-2 border-blue-500"
+                                                        ? "bg-white/10 border-l-2 border-white"
                                                         : "hover:bg-white/5 border-l-2 border-transparent"
                                                         } ${i !== campaigns.filter(c => c.canSubmit !== false).length - 1 ? "border-b border-white/5" : ""}`}
                                                 >
@@ -281,7 +281,7 @@ export default function SubmitPage() {
                                                         </div>
                                                     </div>
                                                     {selectedCampaign === campaign.id.toString() && (
-                                                        <CheckCircle className="h-4 w-4 text-blue-400 flex-shrink-0 mt-1" />
+                                                        <CheckCircle className="h-4 w-4 text-white flex-shrink-0 mt-1" />
                                                     )}
                                                 </button>
                                             ))

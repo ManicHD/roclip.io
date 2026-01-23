@@ -153,7 +153,7 @@ export default function NotificationCenter({ className = "" }: NotificationCente
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-96 bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+                <div className="absolute right-0 mt-2 w-96 bg-black border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
                     {/* Header */}
                     <div className="p-4 border-b border-white/10 flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-white">Notifications</h3>
@@ -238,21 +238,7 @@ export default function NotificationCenter({ className = "" }: NotificationCente
                 </div>
             )}
 
-            <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.05);
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.2);
-                    border-radius: 3px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255, 255, 255, 0.3);
-                }
-            `}</style>
+
         </div>
     );
 }

@@ -10,6 +10,8 @@ import {
     TrendingUp,
     DollarSign,
     Filter,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -155,7 +157,7 @@ function SubmissionRow({
                     <DollarSign className="h-4 w-4 text-green-400" />
                     <div className="text-right">
                         <p className="text-sm font-medium text-white">
-                            ${submission.status === 'ACCEPTED' ? submission.estimatedEarnings.toFixed(2) : '0.00'}
+                            ${submission.status === 'ACCEPTED' ? submission.estimatedEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                         </p>
                         <p className="text-xs text-gray-500">earned</p>
                     </div>
@@ -189,19 +191,33 @@ export default function HistoryPage() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>("all");
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const LIMIT = 15;
 
     useEffect(() => {
-        const params = filter !== "all" ? `?status=${filter}` : "";
-        fetch(`${API_URL}/api/submissions${params}`, { credentials: "include" })
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (filter !== "all") params.append("status", filter);
+        params.append("limit", LIMIT.toString());
+        params.append("offset", ((page - 1) * LIMIT).toString());
+
+        fetch(`${API_URL}/api/submissions?${params.toString()}`, { credentials: "include" })
             .then((r) => r.json())
             .then((data) => {
                 setSubmissions(data.submissions || []);
+                setTotal(data.total || 0);
                 setLoading(false);
             })
             .catch((err) => {
                 console.error("Failed to fetch submissions:", err);
                 setLoading(false);
             });
+    }, [filter, page]);
+
+    // Reset page when filter changes
+    useEffect(() => {
+        setPage(1);
     }, [filter]);
 
     const filters = [
@@ -211,7 +227,9 @@ export default function HistoryPage() {
         { value: "denied", label: "Denied" },
     ];
 
-    if (loading) {
+    const totalPages = Math.ceil(total / LIMIT);
+
+    if (loading && page === 1 && submissions.length === 0) {
         return (
             <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
@@ -228,7 +246,7 @@ export default function HistoryPage() {
                 <div>
                     <h2 className="text-xl font-semibold text-white">Submission History</h2>
                     <p className="text-sm text-gray-400">
-                        {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                        {total} submission{total !== 1 ? "s" : ""}
                     </p>
                 </div>
 
@@ -239,8 +257,8 @@ export default function HistoryPage() {
                             key={f.value}
                             onClick={() => setFilter(f.value)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${filter === f.value
-                                ? "bg-blue-500 text-white"
-                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                                ? "bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-lg"
+                                : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                                 }`}
                         >
                             {f.label}
@@ -250,29 +268,57 @@ export default function HistoryPage() {
             </div>
 
             {/* Submissions List */}
-            {submissions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16">
-                    <div className="rounded-full bg-white/5 p-6 mb-4">
-                        <Clock className="h-12 w-12 text-gray-500" />
+            <div className="space-y-3">
+                {submissions.length === 0 && !loading ? (
+                    <div className="flex flex-col items-center justify-center py-16">
+                        <div className="rounded-full bg-white/5 p-6 mb-4">
+                            <Clock className="h-12 w-12 text-gray-500" />
+                        </div>
+                        <h3 className="text-lg font-medium text-white mb-2">
+                            No submissions yet
+                        </h3>
+                        <p className="text-gray-400 text-center max-w-md">
+                            Submit your first video to a campaign to start earning.
+                        </p>
                     </div>
-                    <h3 className="text-lg font-medium text-white mb-2">
-                        No submissions yet
-                    </h3>
-                    <p className="text-gray-400 text-center max-w-md">
-                        Submit your first video to a campaign to start earning.
-                    </p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {submissions.map((submission, i) => (
-                        <SubmissionRow
-                            key={submission.id}
-                            submission={submission}
-                            delay={i * 0.03}
-                        />
-                    ))}
-                </div>
-            )}
+                ) : (
+                    <>
+                        <div className="space-y-3">
+                            {submissions.map((submission, i) => (
+                                <SubmissionRow
+                                    key={submission.id}
+                                    submission={submission}
+                                    delay={i * 0.03}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-white/5">
+                                <button
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="p-2 rounded-lg bg-white/5 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                                >
+                                    <ChevronLeft className="h-5 w-5" />
+                                </button>
+                                <span className="text-sm text-gray-400">
+                                    Page <span className="text-white font-medium">{page}</span> of{" "}
+                                    <span className="text-white font-medium">{totalPages}</span>
+                                </span>
+                                <button
+                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="p-2 rounded-lg bg-white/5 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+                                >
+                                    <ChevronRight className="h-5 w-5" />
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 }

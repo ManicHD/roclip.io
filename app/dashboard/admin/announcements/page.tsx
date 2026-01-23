@@ -171,8 +171,8 @@ export default function AnnouncementsPage() {
                                             key={annoType.value}
                                             onClick={() => setType(annoType.value)}
                                             className={`p-4 rounded-xl border-2 transition-all duration-200 ${isSelected
-                                                    ? colors[annoType.color as keyof typeof colors]
-                                                    : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20"
+                                                ? colors[annoType.color as keyof typeof colors]
+                                                : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20"
                                                 }`}
                                         >
                                             <Icon className="h-6 w-6 mx-auto mb-2" />
@@ -274,8 +274,8 @@ export default function AnnouncementsPage() {
                             <div
                                 key={announcement.id}
                                 className={`bg-white/5 border rounded-2xl p-6 transition-all duration-200 ${announcement.isActive
-                                        ? "border-white/10"
-                                        : "border-white/5 opacity-60"
+                                    ? "border-white/10"
+                                    : "border-white/5 opacity-60"
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
@@ -294,8 +294,8 @@ export default function AnnouncementsPage() {
                                                 <button
                                                     onClick={() => toggleAnnouncement(announcement.id)}
                                                     className={`p-2 rounded-lg transition-colors ${announcement.isActive
-                                                            ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
-                                                            : "bg-gray-500/10 text-gray-400 hover:bg-gray-500/20"
+                                                        ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                                                        : "bg-gray-500/10 text-gray-400 hover:bg-gray-500/20"
                                                         }`}
                                                     title={announcement.isActive ? "Active" : "Inactive"}
                                                 >

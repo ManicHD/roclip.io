@@ -86,7 +86,7 @@ export default function TotpModal({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-black border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                        className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
                     >
                         {/* Header */}
                         <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
@@ -118,8 +118,8 @@ export default function TotpModal({
                                     onPaste={index === 0 ? handlePaste : undefined}
                                     disabled={loading}
                                     className={`w-12 h-14 text-center text-2xl font-bold bg-white/5 border rounded-xl focus:outline-none focus:ring-2 transition-all ${error
-                                            ? "border-red-500/50 focus:ring-red-500"
-                                            : "border-white/10 focus:ring-emerald-500 focus:border-emerald-500"
+                                        ? "border-red-500/50 focus:ring-red-500"
+                                        : "border-white/10 focus:ring-emerald-500 focus:border-emerald-500"
                                         } text-white placeholder-gray-500 disabled:opacity-50`}
                                 />
                             ))}
@@ -149,8 +149,8 @@ export default function TotpModal({
                                 onClick={handleSubmit}
                                 disabled={!isComplete || loading}
                                 className={`flex-1 px-4 py-2.5 rounded-xl font-semibold transition-all shadow-lg flex items-center justify-center gap-2 ${isComplete && !loading
-                                        ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white"
-                                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white"
+                                    : "bg-gray-600 text-gray-400 cursor-not-allowed"
                                     }`}
                             >
                                 {loading ? (
