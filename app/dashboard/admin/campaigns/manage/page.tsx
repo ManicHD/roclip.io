@@ -197,6 +197,14 @@ export default function ManageCampaignsPage() {
         try {
             // Format payout strings to match Discord bot format: "$X per 1k views"
             const formatPayout = (value: string) => {
+                // First, try to extract just the dollar amount from formatted string like "$5 per 1k views"
+                // Match pattern: optional $ followed by number at the start
+                const formattedMatch = value.match(/^\$?([\d.]+)/);
+                if (formattedMatch) {
+                    const num = parseFloat(formattedMatch[1]);
+                    if (!isNaN(num)) return `$${num} per 1k views`;
+                }
+                // Fallback: if no match, just clean and use
                 const cleaned = value.replace(/[^0-9.]/g, '');
                 const num = parseFloat(cleaned);
                 if (isNaN(num)) return '';
@@ -205,6 +213,12 @@ export default function ManageCampaignsPage() {
 
             // Format budget to ensure it has $ prefix
             const formatBudget = (value: string) => {
+                // Extract just the number from the start, similar to payout
+                const formattedMatch = value.match(/^\$?([\d.,]+)/);
+                if (formattedMatch) {
+                    const cleaned = formattedMatch[1].replace(/,/g, '');
+                    return `$${cleaned}`;
+                }
                 const cleaned = value.replace(/[^0-9.]/g, '');
                 return `$${cleaned}`;
             };
@@ -220,14 +234,27 @@ export default function ManageCampaignsPage() {
                 requireNewUploads: formData.requireNewUploads,
             };
 
-            // Add optional fields
-            if (formData.payoutLong) submitData.payoutLong = formatPayout(formData.payoutLong);
-            if (formData.infoLink) submitData.infoLink = formData.infoLink.trim();
-            if (formData.viewCap) submitData.viewCap = parseInt(formData.viewCap);
-            if (formData.longViewCap) submitData.longViewCap = parseInt(formData.longViewCap);
-            if (formData.minViewsShorts) submitData.minViewsShorts = parseInt(formData.minViewsShorts);
-            if (formData.minViewsLong) submitData.minViewsLong = parseInt(formData.minViewsLong);
-            if (formData.deadline) submitData.deadline = new Date(formData.deadline).toISOString();
+            // Add optional fields - when editing, explicitly send null to clear values
+            // When creating, just don't include them (they'll default correctly)
+            if (editingCampaign) {
+                // Explicitly set to null or value for updates so backend knows to clear them
+                submitData.payoutLong = formData.payoutLong ? formatPayout(formData.payoutLong) : null;
+                submitData.infoLink = formData.infoLink ? formData.infoLink.trim() : null;
+                submitData.viewCap = formData.viewCap ? parseInt(formData.viewCap) : null;
+                submitData.longViewCap = formData.longViewCap ? parseInt(formData.longViewCap) : null;
+                submitData.minViewsShorts = formData.minViewsShorts ? parseInt(formData.minViewsShorts) : null;
+                submitData.minViewsLong = formData.minViewsLong ? parseInt(formData.minViewsLong) : null;
+                submitData.deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
+            } else {
+                // For creation, only include if they have values
+                if (formData.payoutLong) submitData.payoutLong = formatPayout(formData.payoutLong);
+                if (formData.infoLink) submitData.infoLink = formData.infoLink.trim();
+                if (formData.viewCap) submitData.viewCap = parseInt(formData.viewCap);
+                if (formData.longViewCap) submitData.longViewCap = parseInt(formData.longViewCap);
+                if (formData.minViewsShorts) submitData.minViewsShorts = parseInt(formData.minViewsShorts);
+                if (formData.minViewsLong) submitData.minViewsLong = parseInt(formData.minViewsLong);
+                if (formData.deadline) submitData.deadline = new Date(formData.deadline).toISOString();
+            }
 
             const url = editingCampaign
                 ? `${API_URL}/api/admin/campaigns/${editingCampaign.id}`

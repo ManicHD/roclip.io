@@ -33,7 +33,7 @@ interface Campaign {
 
 // Format payout to always show 2 decimal places
 function formatPayout(payout: string | null | undefined): string {
-    if (!payout || payout === "null") return "N/A";
+    if (!payout || payout === "null") return "Not Supported";
     const match = payout.match(/[\d.]+/);
     if (!match) return payout;
     const num = parseFloat(match[0]);

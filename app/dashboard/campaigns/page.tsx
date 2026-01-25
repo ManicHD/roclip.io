@@ -64,7 +64,7 @@ const getRelativeTime = (dateString: string): string => {
 
 // Format payout to always show 2 decimal places
 function formatPayout(payout: string | null | undefined): string {
-    if (!payout || payout === "null") return "N/A";
+    if (!payout || payout === "null") return "Not Supported";
     // Extract the number from the string
     const match = payout.match(/[\d.]+/);
     if (!match) return payout;
@@ -307,7 +307,7 @@ function CampaignModal({ campaign, onClose }: { campaign: Campaign; onClose: () 
                             <div className="space-y-3">
                                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
                                     <span className="text-sm text-gray-400">Payout Rate</span>
-                                    <span className="text-lg font-bold text-purple-400">{campaign.payoutLong ? formatPayout(campaign.payoutLong) : "N/A"}</span>
+                                    <span className="text-lg font-bold text-purple-400">{campaign.payoutLong ? formatPayout(campaign.payoutLong) : "Not Supported"}</span>
                                 </div>
                                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
                                     <span className="text-sm text-gray-400">View Cap</span>
@@ -514,7 +514,7 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
                     <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-purple-400" />
                         <span className="text-sm font-semibold text-white">
-                            {campaign.payoutLong ? formatPayout(campaign.payoutLong) : "N/A"}
+                            {campaign.payoutLong ? formatPayout(campaign.payoutLong) : "Not Supported"}
                         </span>
                     </div>
                 </div>
