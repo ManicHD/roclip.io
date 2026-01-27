@@ -68,7 +68,6 @@ export default function AnnouncementsPage() {
             const res = await fetch(`${API_URL}/api/notifications/announcement`, {
                 method: "POST",
                 credentials: "include",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ title, message, type, sendEmail }),
             });
