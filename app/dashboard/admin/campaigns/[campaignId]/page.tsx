@@ -19,6 +19,8 @@ import {
     Clock,
     XCircle,
     AlertTriangle,
+    SortAsc,
+    SortDesc,
 } from "lucide-react";
 import ConfirmModal from "@/app/components/ConfirmModal";
 
@@ -82,6 +84,12 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ campa
     // Filters
     const [platformFilter, setPlatformFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<string>("all");
+
+    // Sorting
+    type SortOption = 'date' | 'views' | 'earnings';
+    type SortDirection = 'asc' | 'desc';
+    const [sortBy, setSortBy] = useState<SortOption>('date');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
     // Edit state
     const [editingViews, setEditingViews] = useState<{ [key: number]: number }>({});
@@ -435,6 +443,46 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ campa
                         </button>
                     ))}
                 </div>
+
+                {/* Divider */}
+                <div className="w-px h-6 bg-white/10 hidden sm:block" />
+
+                {/* Sort Controls */}
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">Sort:</span>
+                    <div className="flex rounded-xl overflow-hidden border border-white/10">
+                        {[
+                            { value: 'date', label: 'Date' },
+                            { value: 'views', label: 'Views' },
+                            { value: 'earnings', label: 'Earnings' },
+                        ].map((option) => (
+                            <button
+                                key={option.value}
+                                onClick={() => setSortBy(option.value as SortOption)}
+                                className={`px-3 py-1.5 text-sm transition-colors ${sortBy === option.value
+                                    ? "bg-purple-500 text-white"
+                                    : "bg-white/5 text-gray-400 hover:bg-white/10"
+                                    }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                    <button
+                        onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                        title={sortDirection === 'desc' ? 'Highest first' : 'Lowest first'}
+                    >
+                        {sortDirection === 'desc' ? (
+                            <SortDesc className="h-4 w-4 text-purple-400" />
+                        ) : (
+                            <SortAsc className="h-4 w-4 text-purple-400" />
+                        )}
+                        <span className="text-sm text-gray-400">
+                            {sortDirection === 'desc' ? 'High→Low' : 'Low→High'}
+                        </span>
+                    </button>
+                </div>
             </motion.div>
 
             {/* Submissions List */}
@@ -454,7 +502,30 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ campa
                     </div>
                 ) : (
                     <div className="divide-y divide-white/5">
-                        {submissions.map((sub) => (
+                        {[...submissions].sort((a, b) => {
+                            let aValue: number = 0;
+                            let bValue: number = 0;
+
+                            switch (sortBy) {
+                                case 'views':
+                                    aValue = a.manualViewCount ?? a.frozenViewCount ?? a.currentViews;
+                                    bValue = b.manualViewCount ?? b.frozenViewCount ?? b.currentViews;
+                                    break;
+                                case 'earnings':
+                                    aValue = a.earnings;
+                                    bValue = b.earnings;
+                                    break;
+                                case 'date':
+                                default:
+                                    aValue = new Date(a.createdAt).getTime();
+                                    bValue = new Date(b.createdAt).getTime();
+                                    break;
+                            }
+
+                            return sortDirection === 'asc'
+                                ? aValue - bValue
+                                : bValue - aValue;
+                        }).map((sub) => (
                             <div key={sub.id} className="p-4 hover:bg-white/5 transition-colors">
                                 <div className="flex items-start justify-between gap-4 flex-wrap">
                                     {/* Left: Video Info */}

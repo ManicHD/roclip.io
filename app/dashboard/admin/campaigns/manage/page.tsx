@@ -19,6 +19,7 @@ import {
     Loader2,
     Pause,
     Play,
+    Send,
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -42,6 +43,7 @@ interface Campaign {
     active: boolean;
     paused?: boolean;
     createdAt: string;
+    announcementId?: string;
 }
 
 interface CampaignFormData {
@@ -87,6 +89,7 @@ export default function ManageCampaignsPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [publishingId, setPublishingId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchCampaigns();
@@ -185,6 +188,36 @@ export default function ManageCampaignsPage() {
             }
         } catch (err) {
             setError(`Failed to ${action} campaign`);
+        }
+    };
+
+    const handlePublish = async (campaign: Campaign) => {
+        if (!confirm(`Publish "${campaign.name}" to Discord?\n\nThis will create a channel and post the announcement.`)) {
+            return;
+        }
+
+        setPublishingId(campaign.id);
+        setError("");
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/campaigns/${campaign.id}/publish`, {
+                method: "POST",
+                credentials: "include",
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setSuccess("Campaign published to Discord successfully!");
+                fetchCampaigns();
+                setTimeout(() => setSuccess(""), 3000);
+            } else {
+                setError(data.error || "Failed to publish campaign");
+            }
+        } catch (err) {
+            setError("Failed to publish campaign to Discord");
+        } finally {
+            setPublishingId(null);
         }
     };
 
@@ -744,6 +777,22 @@ export default function ManageCampaignsPage() {
                                         >
                                             {campaign.paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
                                         </motion.button>
+                                        {!campaign.announcementId && (
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handlePublish(campaign)}
+                                                disabled={publishingId === campaign.id}
+                                                className="p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-colors disabled:opacity-50"
+                                                title="Publish to Discord"
+                                            >
+                                                {publishingId === campaign.id ? (
+                                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                                ) : (
+                                                    <Send className="h-5 w-5" />
+                                                )}
+                                            </motion.button>
+                                        )}
                                         <motion.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}

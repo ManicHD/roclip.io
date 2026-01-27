@@ -14,15 +14,18 @@ import {
     ChevronRight,
     Wallet,
     Shield,
+    MessageCircleQuestion,
 } from "lucide-react";
 import NotificationCenter from "../components/NotificationCenter";
 import CampaignLaunchPopup from "../components/CampaignLaunchPopup";
 import EmailSetupPopup from "../components/EmailSetupPopup";
+import TOSModal from "../components/TOSModal";
 
 interface User {
     discordId: string;
     username: string;
     avatar?: string;
+    tosAcceptedAt?: string;
 }
 
 interface AuthContextType {
@@ -71,7 +74,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-0 left-0 z-50 h-full w-64 bg-black border-r border-white/10 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed top-0 left-0 z-50 h-full w-64 bg-black border-r border-white/10 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
                 {/* Logo */}
@@ -89,7 +92,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                 </div>
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-1">
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     {allNavItems.map((item) => {
                         const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                         return (
@@ -114,8 +117,12 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                     })}
                 </nav>
 
+
+
+
+
                 {/* User Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+                <div className="p-4 border-t border-white/10 mt-auto">
                     <div className="flex items-center gap-3 mb-3">
                         {user?.avatar ? (
                             <img
@@ -137,6 +144,16 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                             <p className="text-xs text-gray-500">Dashboard</p>
                         </div>
                     </div>
+                    {/* Report a Problem */}
+                    <a
+                        href="https://discord.com/invite/SGf2ADYjb8"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 w-full px-3 py-2 mb-1 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+                    >
+                        <MessageCircleQuestion className="h-4 w-4" />
+                        Report a problem
+                    </a>
                     <button
                         onClick={logout}
                         className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
@@ -145,7 +162,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                         Sign Out
                     </button>
                 </div>
-            </aside>
+            </aside >
         </>
     );
 }
@@ -226,6 +243,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             // Ignore errors
         }
         router.push("/login");
+        router.push("/login");
+    };
+
+    const handleAcceptTOS = async () => {
+        const res = await fetch(`${API_URL}/api/users/accept-tos`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Failed to accept TOS");
+
+        const data = await res.json();
+        if (data.success && user) {
+            setUser({ ...user, tosAcceptedAt: new Date().toISOString() });
+        }
     };
 
     if (loading) {
@@ -250,7 +285,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 {/* Email Setup Popup - Priority over campaign popup */}
                 <EmailSetupPopup onActiveChange={setEmailPopupActive} />
                 {/* Campaign Launch Popup - Disabled when email popup is active */}
+                {/* Campaign Launch Popup - Disabled when email popup is active */}
                 <CampaignLaunchPopup disabled={emailPopupActive} />
+
+                {/* TOS Modal - Blocks everything if not accepted */}
+                {user && !user.tosAcceptedAt && (
+                    <TOSModal onAccept={handleAcceptTOS} />
+                )}
             </div>
         </AuthContext.Provider>
     );

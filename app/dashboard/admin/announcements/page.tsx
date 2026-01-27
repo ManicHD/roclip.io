@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Send, Trash2, Eye, EyeOff, Loader, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import { Bell, Send, Trash2, Eye, EyeOff, Loader, CheckCircle, AlertCircle, Info, AlertTriangle, Mail, MailX } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -34,6 +34,7 @@ export default function AnnouncementsPage() {
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
     const [type, setType] = useState("INFO");
+    const [sendEmail, setSendEmail] = useState(true);
     const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
@@ -67,8 +68,9 @@ export default function AnnouncementsPage() {
             const res = await fetch(`${API_URL}/api/notifications/announcement`, {
                 method: "POST",
                 credentials: "include",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, message, type }),
+                body: JSON.stringify({ title, message, type, sendEmail }),
             });
 
             if (res.ok) {
@@ -138,7 +140,7 @@ export default function AnnouncementsPage() {
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 flex items-center gap-2"
+                    className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all duration-200 flex items-center gap-2 shadow-lg shadow-blue-500/20"
                 >
                     <Send className="h-5 w-5" />
                     New Announcement
@@ -210,12 +212,39 @@ export default function AnnouncementsPage() {
                             <p className="text-xs text-gray-500 mt-1">{message.length}/500 characters</p>
                         </div>
 
+                        {/* Email Toggle */}
+                        <div className="flex items-center gap-3 p-3 bg-black/30 border border-white/10 rounded-xl">
+                            <button
+                                onClick={() => setSendEmail(!sendEmail)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${sendEmail ? 'bg-blue-600' : 'bg-gray-700'
+                                    }`}
+                            >
+                                <span
+                                    className={`${sendEmail ? 'translate-x-6' : 'translate-x-1'
+                                        } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200`}
+                                />
+                            </button>
+                            <span className="flex items-center gap-2 text-sm text-gray-300">
+                                {sendEmail ? (
+                                    <>
+                                        <Mail className="h-4 w-4 text-blue-400" />
+                                        Send email notification to subscribed users
+                                    </>
+                                ) : (
+                                    <>
+                                        <MailX className="h-4 w-4 text-gray-500" />
+                                        Do not send email notification
+                                    </>
+                                )}
+                            </span>
+                        </div>
+
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
                             <button
                                 onClick={createAnnouncement}
                                 disabled={creating || !title || !message}
-                                className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
                             >
                                 {creating ? (
                                     <>
@@ -235,6 +264,7 @@ export default function AnnouncementsPage() {
                                     setTitle("");
                                     setMessage("");
                                     setType("INFO");
+                                    setSendEmail(true);
                                 }}
                                 className="px-6 py-3 bg-white/5 border border-white/10 text-gray-400 font-medium rounded-xl hover:bg-white/10 hover:text-white transition-all duration-200"
                             >

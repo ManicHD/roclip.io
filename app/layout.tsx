@@ -53,11 +53,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: "/favicon.png", // Explicit path for search engines
-    shortcut: "/favicon.png",
-    apple: "/logo.png",
-  },
+
   openGraph: {
     type: "website",
     locale: "en_US",
