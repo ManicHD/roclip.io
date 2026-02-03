@@ -26,6 +26,7 @@ import {
     ChevronUp,
 } from "lucide-react";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import TotpModal from "@/app/components/TotpModal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -96,6 +97,12 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
     const [editingViews, setEditingViews] = useState<{ [key: number]: number }>({});
     const [editingRates, setEditingRates] = useState<{ [key: number]: string }>({});
 
+    // TOTP modal state for payout security
+    const [totpModal, setTotpModal] = useState<{ isOpen: boolean; error: string | null }>({
+        isOpen: false,
+        error: null,
+    });
+
     // List expansion states
     const [showAllCampaigns, setShowAllCampaigns] = useState(false);
     const [showAllSubmissions, setShowAllSubmissions] = useState(false);
@@ -137,40 +144,45 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
 
     const handleProcessPayout = async () => {
         if (!user) return;
-
-        setConfirmModal({
-            isOpen: true,
-            title: "Process Payout",
-            message: `Process payout of $${user.pendingBalance.toFixed(2)} to ${user.username}?`,
-            variant: "info",
-            onConfirm: () => processPayoutConfirmed(),
-        });
+        // Open TOTP modal for security verification
+        setPayoutMessage(null);
+        setTotpModal({ isOpen: true, error: null });
     };
 
-    const processPayoutConfirmed = async () => {
+    const processPayoutConfirmed = async (totpCode: string) => {
         if (!user) return;
 
         setProcessing(true);
-        setPayoutMessage(null);
+        setTotpModal(prev => ({ ...prev, error: null }));
 
         try {
             const res = await fetch(
                 `${API_URL}/api/admin/payouts/process/${user.discordId}`,
                 {
                     method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     credentials: "include",
+                    body: JSON.stringify({ totpCode }),
                 }
             );
 
             const data = await res.json();
 
             if (!res.ok) {
+                // Show error in TOTP modal if it's a TOTP error
+                if (data.error?.includes('TOTP') || data.error?.includes('verification') || data.error?.includes('code')) {
+                    setTotpModal(prev => ({ ...prev, error: data.error }));
+                    setProcessing(false);
+                    return;
+                }
                 throw new Error(data.error || "Failed to process payout");
             }
 
+            // Success - close modal and show success message
+            setTotpModal({ isOpen: false, error: null });
             setPayoutMessage({
                 type: "success",
-                text: `Payout of $${data.amount.toFixed(2)} processed successfully!`,
+                text: `Payout of $${data.amount.toFixed(2)} processed successfully via ${data.method}!`,
             });
 
             // Refresh user data
@@ -183,6 +195,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                 setUser(refreshData);
             }
         } catch (err: any) {
+            setTotpModal({ isOpen: false, error: null });
             setPayoutMessage({
                 type: "error",
                 text: err.message || "Failed to process payout",
@@ -505,6 +518,17 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                 title={confirmModal.title}
                 message={confirmModal.message}
                 variant={confirmModal.variant}
+            />
+
+            {/* TOTP Modal for Payout Security */}
+            <TotpModal
+                isOpen={totpModal.isOpen}
+                onClose={() => setTotpModal({ isOpen: false, error: null })}
+                onVerify={processPayoutConfirmed}
+                title="Payout Verification"
+                message={`Enter your 6-digit code to process payout of $${user?.pendingBalance?.toFixed(2) || '0.00'} to ${user?.username || 'user'}.`}
+                loading={processing}
+                error={totpModal.error}
             />
 
             {/* Back Button */}
