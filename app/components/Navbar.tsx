@@ -27,7 +27,7 @@ export default function Navbar() {
     return (
         <nav className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 rounded-2xl border border-white/10 bg-black/60 backdrop-blur-2xl shadow-2xl shadow-black/50 transition-all duration-300">
             <div className="px-3 py-2 md:px-6 md:py-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between relative">
                     {/* Logo Left */}
                     <Link href="/" className="flex items-center gap-1.5 md:gap-2">
                         <img
@@ -41,7 +41,7 @@ export default function Navbar() {
                     </Link>
 
                     {/* Center Navigation */}
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
                         <Link
                             href="/brands"
                             className={`text-sm font-medium transition-colors ${pathname === '/brands' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
@@ -53,6 +53,12 @@ export default function Navbar() {
                             className={`text-sm font-medium transition-colors ${pathname === '/creators' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
                         >
                             Creators
+                        </Link>
+                        <Link
+                            href="/games"
+                            className={`text-sm font-medium transition-colors ${pathname === '/games' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            Games
                         </Link>
                     </div>
 

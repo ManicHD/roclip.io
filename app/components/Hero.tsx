@@ -39,8 +39,7 @@ export default function Hero() {
                     className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px] mix-blend-screen"
                 />
 
-                {/* Grid Pattern with fade */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+
 
                 {/* Particles */}
                 <BackgroundParticles />
@@ -99,14 +98,6 @@ export default function Hero() {
 
             {/* Main Content */}
             <div className="relative z-20 max-w-5xl mx-auto px-4 flex flex-col items-center justify-center">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="inline-flex items-center mb-8 px-6 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-md shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:shadow-[0_0_25px_rgba(59,130,246,0.4)] transition-all duration-300 mx-auto"
-                >
-                    <span className="text-sm font-semibold text-blue-100 tracking-wide">Trusted by 1,000+ Creators</span>
-                </motion.div>
 
                 <motion.h1
                     className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none mb-6 p-4"

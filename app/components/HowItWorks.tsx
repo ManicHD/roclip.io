@@ -21,7 +21,7 @@ const steps = [
     {
         step: "03",
         title: "Pay for Results",
-        description: "You only pay for verifiable views. Watch your concurrents soar as the views roll in.",
+        description: "You only pay for views that have been delivered to your campaign.",
         icon: Banknote,
         color: "green",
     },

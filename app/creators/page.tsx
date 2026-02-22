@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, DollarSign, Wallet, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowLeft, Play, DollarSign, Wallet, TrendingUp } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -98,73 +98,9 @@ export default function CreatorsPage() {
                         ))}
                     </div>
 
-                    {/* Interactive "How it works" equivalent */}
-                    <div className="mb-32">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            className="relative rounded-[2.5rem] bg-gradient-to-br from-gray-900 to-black border border-white/10 overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-                            <div className="grid md:grid-cols-2 gap-12 p-8 md:p-16 items-center">
-                                <div>
-                                    <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
-                                        Focus on content. <br />
-                                        <span className="text-gray-500">We handle the rest.</span>
-                                    </h2>
-                                    <div className="space-y-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
-                                                <ShieldCheck className="w-5 h-5" />
-                                            </div>
-                                            <p className="text-lg text-gray-300">Safe, verified campaigns only</p>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
-                                                <Zap className="w-5 h-5" />
-                                            </div>
-                                            <p className="text-lg text-gray-300">Fast review times for submissions</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-10">
-                                        <Link href="https://discord.gg/SGf2ADYjb8" target="_blank" className="text-green-400 font-bold hover:text-green-300 flex items-center gap-2 group">
-                                            Join the Community <Play className="w-4 h-4 fill-current group-hover:translate-x-1 transition-transform" />
-                                        </Link>
-                                    </div>
-                                </div>
 
-                                {/* Visual graphic element */}
-                                <div className="relative aspect-square rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                                    <div className="absolute inset-0 bg-green-500/10 animate-pulse" />
-                                    <div className="text-center p-8 relative z-10">
-                                        <div className="text-6xl font-black text-white mb-2">$500+</div>
-                                        <div className="text-gray-400">Average Top Creator Earnings / Week</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    {/* CTA */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        className="text-center"
-                    >
-                        <h2 className="text-4xl md:text-6xl font-black mb-8">
-                            Start Earning Today
-                        </h2>
-                        <Link
-                            href="https://discord.gg/SGf2ADYjb8"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex px-12 py-6 rounded-2xl bg-white text-black font-bold text-xl hover:scale-105 transition-transform shadow-2xl shadow-white/10"
-                        >
-                            Join Discord
-                        </Link>
-                    </motion.div>
 
                 </div>
             </main>

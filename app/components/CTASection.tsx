@@ -8,7 +8,7 @@ export default function CTASection() {
         <section className="py-24 bg-black relative overflow-hidden">
             {/* Background */}
             <div className="absolute inset-0 bg-gradient-to-t from-blue-950/30 via-black to-black" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#6b728010_1px,transparent_1px),linear-gradient(to_bottom,#6b728010_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+
 
             <div className="max-w-4xl mx-auto px-6 relative z-10">
                 <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none" />

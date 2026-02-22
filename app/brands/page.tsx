@@ -24,18 +24,13 @@ const steps = [
     {
         number: "03",
         title: "Creators Post Content",
-        description: "Creators choose your campaign, make short-form videos, and upload publicly.",
+        description: "Creators choose your campaign, make videos, and upload publicly.",
         icon: Video,
         color: "purple",
     },
 ];
 
 const benefits = [
-    {
-        title: "Zero Bot Traffic",
-        desc: "Every single video is manually reviewed by our team. No bots, only real engagement.",
-        icon: Shield
-    },
     {
         title: "Massive Reach",
         desc: "Access a network of creators with over 50M+ combined subscribers ready to promote.",
@@ -45,6 +40,11 @@ const benefits = [
         title: "Pay for Performance",
         desc: "Set your own RPM and budget. You control exactly how much you spend per view.",
         icon: TrendingUp
+    },
+    {
+        title: "Zero Bot Traffic",
+        desc: "Every single video is manually reviewed by our team. No bots, only real engagement.",
+        icon: Shield
     }
 ];
 
@@ -159,29 +159,7 @@ export default function BrandsPage() {
                         </div>
                     </div>
 
-                    {/* Final CTA */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        className="relative rounded-3xl p-12 md:p-24 text-center overflow-hidden border border-white/10"
-                    >
-                        <div className="absolute inset-0 bg-blue-600/10" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
 
-                        <div className="relative z-10">
-                            <h2 className="text-4xl md:text-6xl font-black mb-8">
-                                Ready to go viral?
-                            </h2>
-                            <Link
-                                href="https://discord.gg/q5Ew3bQnB5"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex px-10 py-5 rounded-2xl bg-white text-black font-bold text-xl hover:scale-105 transition-transform"
-                            >
-                                Create Campaign
-                            </Link>
-                        </div>
-                    </motion.div>
                 </div>
             </main>
         </div>

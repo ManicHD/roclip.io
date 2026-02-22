@@ -475,11 +475,37 @@ export default function AdminDashboard() {
                             </Link>
                         </motion.div>
 
-                        {/* Announcement Card */}
+                        {/* Featured Games Card */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.55 }}
+                        >
+                            <Link href="/dashboard/admin/games">
+                                <div className="group relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-6 transition-all hover:border-indigo-500/30">
+                                    <div className="relative z-10 flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="rounded-xl bg-indigo-500/20 p-3 text-indigo-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gamepad-2 h-6 w-6"><line x1="6" x2="10" y1="12" y2="12" /><line x1="8" x2="8" y1="10" y2="14" /><line x1="15" x2="15.01" y1="13" y2="13" /><line x1="18" x2="18.01" y1="11" y2="11" /><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" /></svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-white">Manage Featured Games</h3>
+                                                <p className="text-sm text-indigo-200/60">Add or remove games from /games</p>
+                                            </div>
+                                        </div>
+                                        <div className="rounded-full bg-indigo-500/10 p-2 text-indigo-400 transition-transform group-hover:translate-x-1">
+                                            <ArrowRight className="h-5 w-5" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        </motion.div>
+
+                        {/* Announcement Card */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.6 }}
                         >
                             <Link href="/dashboard/admin/announcements">
                                 <div className="group relative overflow-hidden rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-6 transition-all hover:border-blue-500/30">
