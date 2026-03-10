@@ -312,7 +312,7 @@ export default function PaymentPage() {
         }
     };
 
-    const hasAnyConnection = stripeStatus?.connected || paypalStatus?.connected;
+    const hasAnyConnection = stripeStatus?.connected; // PAYPAL HIDDEN
 
     return (
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)] py-8">
@@ -400,31 +400,9 @@ export default function PaymentPage() {
                     )}
 
                     {/* Payment Method Selection */}
-                    {/* Preferred Method Indicator (when both connected) */}
-                    {stripeStatus?.connected && stripeStatus?.payoutsEnabled && paypalStatus?.connected && (
-                        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/10 mb-4">
-                            <div className="flex items-center justify-between flex-wrap gap-3">
-                                <div>
-                                    <p className="text-sm font-medium text-white">Both payment methods connected</p>
-                                    <p className="text-xs text-gray-400">
-                                        {preferredMethod
-                                            ? `Payouts will be sent to ${preferredMethod === 'stripe' ? 'Stripe (Bank)' : 'PayPal'}`
-                                            : 'Select a preferred method for payouts'}
-                                    </p>
-                                </div>
-                                {preferredMethod && (
-                                    <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${preferredMethod === 'stripe'
-                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                        : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                        }`}>
-                                        {preferredMethod === 'stripe' ? '🏦 Stripe' : '💳 PayPal'} is Preferred
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    {/* PAYPAL HIDDEN: Preferred method indicator disabled */}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-1 gap-4 mb-6">
                         {/* Stripe Card */}
                         <button
                             onClick={() => setSelectedMethod("stripe")}
@@ -435,11 +413,6 @@ export default function PaymentPage() {
                         >
                             {stripeStatus?.connected && (
                                 <div className="absolute top-3 right-3 flex items-center gap-2">
-                                    {preferredMethod === "stripe" && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                                            PREFERRED
-                                        </span>
-                                    )}
                                     <CheckCircle className="h-5 w-5 text-green-400" />
                                 </div>
                             )}
@@ -448,7 +421,7 @@ export default function PaymentPage() {
                                 <h3 className="font-semibold text-white">Stripe</h3>
                             </div>
                             <p className="text-xs text-gray-400">
-                                <span className="text-green-400 font-medium">Lower Fees</span> • 3-7 Business Days
+                                <span className="text-green-400 font-medium">Low Fees</span> • 3-7 Business Days
                             </p>
                             <p className="text-[10px] text-gray-500 mt-1">
                                 Bank account or debit card
@@ -458,35 +431,7 @@ export default function PaymentPage() {
                             )}
                         </button>
 
-                        {/* PayPal Card */}
-                        <button
-                            onClick={() => setSelectedMethod("paypal")}
-                            className={`relative p-5 rounded-xl border-2 transition-all text-left ${selectedMethod === "paypal"
-                                ? "border-purple-500 bg-purple-500/10"
-                                : "border-white/10 bg-white/5 hover:border-white/20"
-                                }`}
-                        >
-                            {paypalStatus?.connected && (
-                                <div className="absolute top-3 right-3 flex items-center gap-2">
-                                    {preferredMethod === "paypal" && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                                            PREFERRED
-                                        </span>
-                                    )}
-                                    <CheckCircle className="h-5 w-5 text-green-400" />
-                                </div>
-                            )}
-                            <div className="flex items-center gap-3 mb-2">
-                                <Mail className="h-5 w-5 text-purple-400" />
-                                <h3 className="font-semibold text-white">PayPal</h3>
-                            </div>
-                            <p className="text-xs text-gray-400">
-                                <span className="text-yellow-400 font-medium">Higher Fees</span> • Quicker Transfer
-                            </p>
-                            {paypalStatus?.connected && paypalStatus.email && (
-                                <p className="text-xs text-purple-400 mt-2">{paypalStatus.email}</p>
-                            )}
-                        </button>
+                        {/* PAYPAL HIDDEN */}
                     </div>
 
                     {/* Connection Forms */}
@@ -562,21 +507,7 @@ export default function PaymentPage() {
                                                 Complete Setup
                                             </button>
                                         )}
-                                        {/* Set as Preferred (only show when both methods connected) */}
-                                        {paypalStatus?.connected && stripeStatus.payoutsEnabled && preferredMethod !== "stripe" && (
-                                            <button
-                                                onClick={() => savePaymentPreference("stripe")}
-                                                disabled={savingPreference}
-                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
-                                            >
-                                                {savingPreference ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <CheckCircle className="h-4 w-4" />
-                                                )}
-                                                Set as Preferred
-                                            </button>
-                                        )}
+                                        {/* PAYPAL HIDDEN: Set as preferred button removed */}
                                         <button
                                             onClick={handleOpenDashboard}
                                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
@@ -645,7 +576,8 @@ export default function PaymentPage() {
                         </div>
                     )}
 
-                    {selectedMethod === "paypal" && (
+                    {/* PAYPAL HIDDEN */}
+                    {false && ( // Wrapped PayPal section to hide it
                         <div className="space-y-4">
                             {paypalStatus?.connected ? (
                                 <div className="space-y-4">
@@ -656,8 +588,8 @@ export default function PaymentPage() {
                                                 <div className="w-3 h-3 rounded-full bg-purple-500 animate-pulse" />
                                                 <div>
                                                     <p className="font-medium text-white">Connected to PayPal</p>
-                                                    {paypalStatus.email && (
-                                                        <p className="text-sm text-gray-400">{paypalStatus.email}</p>
+                                                    {paypalStatus?.email && (
+                                                        <p className="text-sm text-gray-400">{paypalStatus?.email}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -668,20 +600,7 @@ export default function PaymentPage() {
                                     {/* Action Buttons */}
                                     <div className="flex flex-wrap gap-3 pt-2">
                                         {/* Set as Preferred (only show when both methods connected) */}
-                                        {stripeStatus?.connected && stripeStatus?.payoutsEnabled && preferredMethod !== "paypal" && (
-                                            <button
-                                                onClick={() => savePaymentPreference("paypal")}
-                                                disabled={savingPreference}
-                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors disabled:opacity-50"
-                                            >
-                                                {savingPreference ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <CheckCircle className="h-4 w-4" />
-                                                )}
-                                                Set as Preferred
-                                            </button>
-                                        )}
+                                        {/* Removed Set as Preferred button as per instruction */}
                                         <button
                                             onClick={() => initiateDisconnect("paypal")}
                                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"

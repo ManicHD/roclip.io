@@ -519,7 +519,7 @@ export default function ManageCampaignsPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                Payout (Short Videos) *
+                                                Payout (per 1K views) *
                                             </label>
                                             <div className="relative">
                                                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -572,19 +572,20 @@ export default function ManageCampaignsPage() {
                                     <h3 className="text-lg font-semibold text-white">View Limits</h3>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                View Cap (Short Videos)
+                                        {/* SHORT-FORM DISABLED */}
+                                        <div className="opacity-50 pointer-events-none">
+                                            <label className="block text-sm font-medium text-gray-500 mb-2">
+                                                View Cap (Short Videos) — Disabled
                                             </label>
                                             <div className="relative">
-                                                <Eye className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                                <Eye className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600" />
                                                 <input
                                                     type="number"
                                                     min="0"
+                                                    disabled
                                                     value={formData.viewCap}
-                                                    onChange={(e) => setFormData({ ...formData, viewCap: e.target.value })}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                                                    placeholder="e.g., 50000"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                                                    placeholder="Disabled"
                                                 />
                                             </div>
                                         </div>
@@ -606,17 +607,18 @@ export default function ManageCampaignsPage() {
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                Min Views (Short Videos)
+                                        {/* SHORT-FORM DISABLED */}
+                                        <div className="opacity-50 pointer-events-none">
+                                            <label className="block text-sm font-medium text-gray-500 mb-2">
+                                                Min Views (Short Videos) — Disabled
                                             </label>
                                             <input
                                                 type="number"
                                                 min="0"
+                                                disabled
                                                 value={formData.minViewsShorts}
-                                                onChange={(e) => setFormData({ ...formData, minViewsShorts: e.target.value })}
-                                                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                                                placeholder="e.g., 1000"
+                                                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-500 placeholder-gray-600 cursor-not-allowed"
+                                                placeholder="Disabled"
                                             />
                                         </div>
 
@@ -645,17 +647,22 @@ export default function ManageCampaignsPage() {
                                             Allowed Platforms *
                                         </label>
                                         <div className="flex flex-wrap gap-3">
+                                            {/* SHORT-FORM DISABLED: Only YouTube selectable, others grayed out */}
                                             {["youtube", "tiktok", "instagram"].map((platform) => (
                                                 <button
                                                     key={platform}
                                                     type="button"
-                                                    onClick={() => togglePlatform(platform)}
-                                                    className={`px-4 py-2 rounded-xl font-medium transition-all ${formData.allowedPlatforms.includes(platform)
-                                                        ? "bg-purple-500 text-white"
-                                                        : "bg-white/5 text-gray-400 hover:bg-white/10"
+                                                    onClick={() => platform === 'youtube' ? togglePlatform(platform) : undefined}
+                                                    disabled={platform !== 'youtube'}
+                                                    className={`px-4 py-2 rounded-xl font-medium transition-all ${platform !== 'youtube'
+                                                            ? "bg-white/5 text-gray-600 cursor-not-allowed line-through"
+                                                            : formData.allowedPlatforms.includes(platform)
+                                                                ? "bg-purple-500 text-white"
+                                                                : "bg-white/5 text-gray-400 hover:bg-white/10"
                                                         }`}
                                                 >
                                                     {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                                                    {platform !== 'youtube' && <span className="ml-1 text-xs">(disabled)</span>}
                                                 </button>
                                             ))}
                                         </div>

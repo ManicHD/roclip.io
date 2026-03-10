@@ -76,10 +76,11 @@ function formatPayout(payout: string | null | undefined): string {
 function PlatformBadge({ platform }: { platform: string }) {
     const p = platform.toLowerCase().trim();
 
+    // SHORT-FORM DISABLED: Only show YouTube badges
+    if (p !== 'youtube') return null;
+
     const getIcon = () => {
         if (p === "youtube") return <YouTubeIcon />;
-        if (p === "tiktok") return <TikTokIcon />;
-        if (p === "instagram") return <InstagramIcon />;
         return null;
     };
 
@@ -276,24 +277,15 @@ function CampaignModal({ campaign, onClose }: { campaign: Campaign; onClose: () 
                             </div>
                         </div>
 
-                        {/* Short Videos Requirements */}
+                        {/* Short-Form Disabled Notice */}
                         <div className="lg:col-span-1">
                             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
+                                <span className="w-2 h-2 rounded-full bg-gray-500"></span>
                                 Short Videos
                             </h3>
                             <div className="space-y-3">
-                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
-                                    <span className="text-sm text-gray-400">Payout Rate</span>
-                                    <span className="text-lg font-bold text-green-400">{formatPayout(campaign.payout)}</span>
-                                </div>
-                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
-                                    <span className="text-sm text-gray-400">View Cap</span>
-                                    <span className="text-base font-semibold text-white">{campaign.viewCap ? campaign.viewCap.toLocaleString() : "No limit"}</span>
-                                </div>
-                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group hover:bg-white/[0.07] transition-colors">
-                                    <span className="text-sm text-gray-400">Min Views</span>
-                                    <span className="text-base font-semibold text-white">{campaign.minViewsShorts ? campaign.minViewsShorts.toLocaleString() : "None"}</span>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+                                    <p className="text-sm text-gray-500">Short-form submissions are currently disabled. Only long-form YouTube videos are accepted.</p>
                                 </div>
                             </div>
                         </div>
@@ -499,22 +491,13 @@ function CampaignCard({ campaign, delay, onClick }: { campaign: Campaign; delay:
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 gap-3 mb-4">
                 <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-xs text-gray-500 mb-1">Short Form</p>
-                    <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-400" />
-                        <span className="text-sm font-semibold text-white">
-                            {formatPayout(campaign.payout)}
-                        </span>
-                    </div>
-                </div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-xs text-gray-500 mb-1">Long Form</p>
+                    <p className="text-xs text-gray-500 mb-1">Long Form Rate</p>
                     <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-purple-400" />
                         <span className="text-sm font-semibold text-white">
-                            {campaign.payoutLong ? formatPayout(campaign.payoutLong) : "Not Supported"}
+                            {campaign.payoutLong ? formatPayout(campaign.payoutLong) : formatPayout(campaign.payout)}
                         </span>
                     </div>
                 </div>
