@@ -1,9 +1,50 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { ArrowRight, ArrowDown, Play, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { YouTubeIcon, TikTokIcon } from './PlatformIcons';
 import BackgroundParticles from './BackgroundParticles';
+
+const WORDS = ["GAMES", "SERVICES", "BRANDS"];
+const TYPE_SPEED = 80;
+const DELETE_SPEED = 50;
+const PAUSE = 1800;
+
+function TypewriterWord() {
+    const [display, setDisplay] = useState("");
+    const [wordIdx, setWordIdx] = useState(0);
+    const [typing, setTyping] = useState(true);
+
+    useEffect(() => {
+        const word = WORDS[wordIdx];
+        if (typing) {
+            if (display.length < word.length) {
+                const t = setTimeout(() => setDisplay(word.slice(0, display.length + 1)), TYPE_SPEED);
+                return () => clearTimeout(t);
+            } else {
+                const t = setTimeout(() => setTyping(false), PAUSE);
+                return () => clearTimeout(t);
+            }
+        } else {
+            if (display.length > 0) {
+                const t = setTimeout(() => setDisplay(display.slice(0, -1)), DELETE_SPEED);
+                return () => clearTimeout(t);
+            } else {
+                setWordIdx((i) => (i + 1) % WORDS.length);
+                setTyping(true);
+            }
+        }
+    }, [display, typing, wordIdx]);
+
+    return (
+        <span className="relative inline-block mt-2">
+            {display}
+            <span className="animate-pulse">|</span>
+            <span className="absolute -bottom-2 left-0 right-0 h-4 bg-blue-600/20 -skew-x-12 -z-10" />
+        </span>
+    );
+}
 
 export default function Hero() {
     return (
@@ -107,15 +148,7 @@ export default function Hero() {
                 >
                     CLIP <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 bg-[length:200%_auto] animate-gradient pr-2">ROBLOX</span>
                     <br />
-                    <span className="relative inline-block mt-2">
-                        GAMES
-                        <motion.div
-                            className="absolute -bottom-2 left-0 right-0 h-4 bg-blue-600/20 -skew-x-12 -z-10"
-                            initial={{ width: 0 }}
-                            animate={{ width: "100%" }}
-                            transition={{ delay: 0.8, duration: 0.8 }}
-                        />
-                    </span>
+                    <TypewriterWord />
                 </motion.h1>
 
                 <motion.p

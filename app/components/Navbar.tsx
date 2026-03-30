@@ -58,7 +58,7 @@ export default function Navbar() {
                             href="/games"
                             className={`text-sm font-medium transition-colors ${pathname === '/games' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
                         >
-                            Games
+                            Campaigns
                         </Link>
                     </div>
 
